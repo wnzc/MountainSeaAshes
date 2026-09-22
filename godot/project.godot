@@ -25,9 +25,9 @@ Game="*res://autoload/game.gd"
 [display]
 
 window/size/viewport_width=1080
-window/size/viewport_height=1920
-window/size/window_width_override=540
-window/size/window_height_override=960
+window/size/viewport_height=2700
+window/size/window_width_override=432
+window/size/window_height_override=1080
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1

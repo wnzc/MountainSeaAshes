@@ -18,6 +18,26 @@ godot/.export/
 
 # Workspace-root AI image drafts (canonical copies live in godot/assets/)
 /generated-*.png
+/mirror_stream_bg_v2.png
+/path_texture.png
+/spirit_*.png
+/enemy_*.png
+
+# Cocos Creator generated / cache / build
+cocos/library/
+cocos/temp/
+cocos/build/
+cocos/profiles/
+cocos/native/
+cocos/local/
+cocos/output-*.png
+cocos/crop-*.png
+cocos/tools/screenshot-creator.ps1
+cocos/tools/open-main-scene.ps1
+cocos/chrome-*.txt
+cocos/chrome-dom.html
+cocos/build-log.txt
+cocos/build-err.txt
 
 # Node
 node_modules/

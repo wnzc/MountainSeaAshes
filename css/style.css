@@ -1,5 +1,6 @@
 /* 山海余烬 · 镜水涧 Demo · 界面样式
  * 现代极简 UI + 少量宣纸/印章元素（对应 GDD §11）
+ * 适配 21:9 及更修长手机（设计画布 1080×2700，约 9:22.5）
  */
 
 :root {
@@ -17,6 +18,8 @@
   --lightning: #7b5cff;
   --wind: #5cb88a;
   --ice: #a8d4e8;
+  /* 相对设计稿 1080 宽的 UI 放大系数（按钮/卡片） */
+  --ui-scale: 1.28;
 }
 
 * {
@@ -43,23 +46,39 @@ body {
   justify-content: center;
 }
 
+/* 手机全屏铺满；桌面显示修长机框（9:22.5） */
 #frame {
   position: relative;
-  width: min(100vw, calc(100vh * 9 / 16));
-  height: min(100vh, calc(100vw * 16 / 9));
-  max-width: 540px;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-width: none;
   background: #2a3330;
-  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (min-width: 720px) {
+  #frame {
+    width: min(540px, calc(100vh * 1080 / 2700));
+    height: min(96vh, calc(540px * 2700 / 1080));
+    border-radius: 22px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  }
 }
 
 #game {
-  width: 100%;
-  height: 100%;
   display: block;
   cursor: pointer;
   touch-action: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /* JS 按 cover 策略写入实际像素尺寸 */
+  width: 100%;
+  height: 100%;
 }
 
 /* ── 顶部 HUD ── */
@@ -70,8 +89,8 @@ body {
   right: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 10px;
+  padding: max(14px, env(safe-area-inset-top)) 14px 16px;
   pointer-events: none;
   z-index: 5;
 }
@@ -83,20 +102,20 @@ body {
 .hud-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: var(--panel);
   border: 1px solid var(--panel-border);
   color: var(--text);
   border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 10px 16px;
+  font-size: 16px;
+  font-weight: 700;
   backdrop-filter: blur(8px);
   white-space: nowrap;
 }
 
 .hud-pill .ico {
-  font-size: 14px;
+  font-size: 17px;
 }
 
 .hud-spacer {
@@ -104,42 +123,43 @@ body {
 }
 
 .hud-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--panel-border);
-  background: var(--panel);
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  border: 1.5px solid rgba(212, 168, 75, 0.45);
+  background: linear-gradient(180deg, rgba(48, 54, 48, 0.95), rgba(24, 28, 24, 0.95));
   color: var(--text);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
   cursor: pointer;
   backdrop-filter: blur(8px);
+  transition: transform 0.08s ease, filter 0.12s ease;
 }
 
 .hud-btn:active {
-  transform: scale(0.94);
+  transform: scale(0.92);
 }
 
 /* Boss 血条 */
 #boss-bar {
   position: absolute;
-  top: 52px;
-  left: 12%;
-  right: 12%;
+  top: calc(max(14px, env(safe-area-inset-top)) + 78px);
+  left: 10%;
+  right: 10%;
   z-index: 5;
   pointer-events: none;
 }
 
 #boss-bar .label {
   text-align: center;
-  font-size: 12px;
+  font-size: 15px;
   color: var(--muted);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   text-shadow: 0 1px 2px #000;
 }
 
 #boss-bar .track {
-  height: 10px;
+  height: 14px;
   background: rgba(0, 0, 0, 0.45);
   border-radius: 999px;
   overflow: hidden;
@@ -161,54 +181,57 @@ body {
   bottom: 0;
   display: flex;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 8px 14px;
+  gap: 10px;
+  padding: 12px 10px max(16px, env(safe-area-inset-bottom));
   z-index: 5;
-  background: linear-gradient(transparent, rgba(10, 14, 12, 0.45) 35%);
-  /* 不挡住战场中段，只占底部窄条 */
-  max-height: 28%;
+  background: linear-gradient(transparent, rgba(10, 14, 12, 0.5) 40%);
+  max-height: 32%;
 }
 
 .spirit-card {
-  width: 78px;
-  height: 108px;
-  border-radius: 16px;
-  border: 2px solid rgba(212, 168, 75, 0.55);
-  background:
-    linear-gradient(180deg, rgba(36, 44, 38, 0.96), rgba(18, 24, 20, 0.96));
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 112px;
+  width: auto;
+  height: auto;
+  aspect-ratio: 108 / 150;
+  border-radius: 18px;
+  border: 2.5px solid rgba(212, 168, 75, 0.55);
+  background: linear-gradient(180deg, rgba(36, 44, 38, 0.96), rgba(18, 24, 20, 0.96));
   color: var(--text);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
   cursor: pointer;
   backdrop-filter: blur(8px);
   transition: transform 0.12s ease, border-color 0.12s, box-shadow 0.12s;
   box-shadow: inset 0 0 0 1px rgba(243, 239, 228, 0.08);
+  flex-shrink: 1;
 }
 
 .spirit-card .card-icon {
-  font-size: 28px;
+  font-size: 36px;
   line-height: 1;
 }
 
 .spirit-card .card-name {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 800;
   color: var(--text);
 }
 
 .spirit-card .card-cost {
-  font-size: 15px;
+  font-size: 18px;
   color: var(--gold);
   font-weight: 800;
 }
 
 .spirit-card.selected {
   border-color: var(--gold);
-  box-shadow: 0 0 0 2px rgba(212, 168, 75, 0.35), 0 0 16px rgba(212, 168, 75, 0.25);
-  transform: translateY(-4px);
+  box-shadow: 0 0 0 3px rgba(212, 168, 75, 0.35), 0 0 18px rgba(212, 168, 75, 0.25);
+  transform: translateY(-6px);
 }
 
 .spirit-card.disabled {
@@ -217,27 +240,27 @@ body {
 }
 
 .spirit-card:active {
-  transform: scale(0.96);
+  transform: scale(0.95);
 }
 
 /* ── 塔位菜单 ── */
 #slot-panel {
   position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 130px;
+  left: 14px;
+  right: 14px;
+  bottom: 178px;
   z-index: 6;
   background: var(--panel);
   border: 2px solid rgba(212, 168, 75, 0.45);
-  border-radius: 18px;
-  padding: 16px;
+  border-radius: 20px;
+  padding: 18px;
   backdrop-filter: blur(10px);
 }
 
 .panel-title {
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 800;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   color: var(--text);
 }
 
@@ -247,29 +270,30 @@ body {
 }
 
 .panel-meta {
-  font-size: 16px;
+  font-size: 18px;
   color: var(--muted);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   line-height: 1.45;
 }
 
 .panel-hint {
-  font-size: 16px;
+  font-size: 18px;
   color: var(--muted);
 }
 
 .panel-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 14px;
+  gap: 12px;
+  margin-top: 16px;
 }
 
 .panel-actions button {
   flex: 1;
   border: none;
-  border-radius: 12px;
-  padding: 14px 12px;
-  font-size: 18px;
+  border-radius: 14px;
+  padding: 18px 14px;
+  min-height: 64px;
+  font-size: 22px;
   font-weight: 800;
   cursor: pointer;
   background: rgba(212, 168, 75, 0.2);
@@ -293,11 +317,11 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 38%;
+  bottom: 36%;
   text-align: center;
   z-index: 8;
   pointer-events: none;
-  font-size: 28px;
+  font-size: 34px;
   font-weight: 800;
   color: #ffd27a;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
@@ -306,12 +330,12 @@ body {
 }
 
 #chain-banner.big {
-  font-size: 40px;
+  font-size: 48px;
   color: #ff9b6a;
 }
 
 #chain-banner.ultimate {
-  font-size: 48px;
+  font-size: 56px;
   color: #ff6b4a;
   animation: pop 0.4s ease, glow 1.2s ease;
 }
@@ -351,7 +375,7 @@ body {
   justify-content: center;
   background: rgba(10, 14, 12, 0.72);
   backdrop-filter: blur(6px);
-  padding: 24px;
+  padding: 28px;
 }
 
 .overlay.hidden,
@@ -360,43 +384,43 @@ body {
 }
 
 .panel {
-  width: min(100%, 320px);
+  width: min(100%, 380px);
   background: rgba(28, 34, 30, 0.95);
   border: 1px solid var(--panel-border);
-  border-radius: 20px;
-  padding: 28px 22px;
+  border-radius: 22px;
+  padding: 32px 24px;
   text-align: center;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
 
 .panel h1 {
   font-family: 'STKaiti', 'KaiTi', 'PingFang SC', serif;
-  font-size: 36px;
+  font-size: 42px;
   letter-spacing: 0.2em;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   color: var(--paper);
 }
 
 .panel h1 .en {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.35em;
   color: var(--muted);
   font-family: sans-serif;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .panel .sub {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--muted);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   line-height: 1.6;
 }
 
 .panel .tagline {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--gold);
-  margin-bottom: 18px;
+  margin-bottom: 22px;
   letter-spacing: 0.12em;
 }
 
@@ -404,10 +428,11 @@ body {
   display: block;
   width: 100%;
   border: none;
-  border-radius: 12px;
-  padding: 14px 16px;
-  margin-top: 10px;
-  font-size: 15px;
+  border-radius: 14px;
+  padding: 18px 18px;
+  margin-top: 12px;
+  min-height: 64px;
+  font-size: 20px;
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
@@ -437,36 +462,43 @@ body {
 }
 
 #result-stats {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--muted);
-  margin: 10px 0 6px;
+  margin: 12px 0 8px;
 }
 
 /* Toast */
 #toast {
   position: absolute;
-  top: 90px;
+  top: calc(max(14px, env(safe-area-inset-top)) + 88px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 9;
   background: var(--panel);
   border: 1px solid var(--panel-border);
   color: var(--text);
-  padding: 8px 16px;
+  padding: 12px 20px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 16px;
   white-space: nowrap;
   backdrop-filter: blur(8px);
   pointer-events: none;
 }
 
-/* 小屏适配 */
-@media (max-height: 640px) {
+/* 矮屏（横过短窗）略缩卡片，保证 5 张可点 */
+@media (max-height: 700px) {
   .spirit-card {
-    width: 52px;
-    height: 64px;
+    max-width: 88px;
   }
   .spirit-card .card-icon {
+    font-size: 26px;
+  }
+  .spirit-card .card-name {
+    font-size: 16px;
+  }
+  .hud-btn {
+    width: 56px;
+    height: 56px;
     font-size: 18px;
   }
 }

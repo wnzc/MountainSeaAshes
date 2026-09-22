@@ -327,6 +327,16 @@ export class Game {
     this.spiritsAvailable = LEVEL.availableSpirits.slice();
     this.uiCallbacks = {};
 
+    // 背景图（覆盖裁切适配 21:9+）
+    this.bgImage = null;
+    if (MAP.background) {
+      const img = new Image();
+      img.src = MAP.background;
+      img.onload = () => {
+        this.bgImage = img;
+      };
+    }
+
     // bound loop
     this._last = 0;
     this._raf = 0;
@@ -1302,7 +1312,15 @@ export class Game {
   }
 
   drawBackground(ctx) {
-    // 淡墨山海
+    if (this.bgImage) {
+      const img = this.bgImage;
+      const s = Math.max(this.W / img.width, this.H / img.height);
+      const dw = img.width * s;
+      const dh = img.height * s;
+      ctx.drawImage(img, (this.W - dw) / 2, (this.H - dh) / 2, dw, dh);
+      return;
+    }
+    // 淡墨山海（背景图未加载时的兜底）
     const g = ctx.createLinearGradient(0, 0, 0, this.H);
     g.addColorStop(0, '#c5d0c4');
     g.addColorStop(0.35, '#b8c4b4');
@@ -1311,12 +1329,11 @@ export class Game {
     ctx.fillStyle = g;
     ctx.fillRect(-20, -20, this.W + 40, this.H + 40);
 
-    // 远山
     ctx.fillStyle = 'rgba(90, 110, 95, 0.25)';
     ctx.beginPath();
-    ctx.moveTo(0, 420);
+    ctx.moveTo(0, 600);
     for (let x = 0; x <= this.W; x += 40) {
-      ctx.lineTo(x, 380 + Math.sin(x * 0.008) * 40 + Math.sin(x * 0.02) * 15);
+      ctx.lineTo(x, 540 + Math.sin(x * 0.008) * 40 + Math.sin(x * 0.02) * 15);
     }
     ctx.lineTo(this.W, 0);
     ctx.lineTo(0, 0);
@@ -1325,25 +1342,14 @@ export class Game {
 
     ctx.fillStyle = 'rgba(70, 90, 75, 0.18)';
     ctx.beginPath();
-    ctx.moveTo(0, 900);
+    ctx.moveTo(0, 1300);
     for (let x = 0; x <= this.W; x += 30) {
-      ctx.lineTo(x, 860 + Math.sin(x * 0.01 + 2) * 50);
+      ctx.lineTo(x, 1240 + Math.sin(x * 0.01 + 2) * 50);
     }
-    ctx.lineTo(this.W, 500);
-    ctx.lineTo(0, 500);
+    ctx.lineTo(this.W, 700);
+    ctx.lineTo(0, 700);
     ctx.closePath();
     ctx.fill();
-
-    // 装饰竹影
-    ctx.strokeStyle = 'rgba(60, 85, 65, 0.12)';
-    ctx.lineWidth = 3;
-    for (let i = 0; i < 8; i++) {
-      const x = 40 + i * 130;
-      ctx.beginPath();
-      ctx.moveTo(x, 200);
-      ctx.lineTo(x + 10, 1500);
-      ctx.stroke();
-    }
   }
 
   drawPath(ctx) {
@@ -1964,7 +1970,7 @@ export class Game {
     // 塔位命中（热区放大）
     let hitSlot = null;
     for (const slot of this.slots.values()) {
-      if (Math.hypot(x - slot.x, y - slot.y) < 48) {
+      if (Math.hypot(x - slot.x, y - slot.y) < 64) {
         hitSlot = slot;
         break;
       }

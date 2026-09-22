@@ -76,11 +76,19 @@ func _ready() -> void:
 	_show_toast("放置灵兽，守住灵种！")
 
 func _setup_map() -> void:
-	var tex: Texture2D = load("res://assets/maps/mirror_stream_bg.png")
+	# 优先使用 21:9+ 修长背景，兜底旧图
+	var tex: Texture2D = load("res://assets/maps/mirror_stream_bg_v2.png")
+	if tex == null:
+		tex = load("res://assets/maps/mirror_stream_bg.png")
 	if tex:
 		bg.texture = tex
 		bg.centered = false
-		bg.scale = Vector2(1080.0 / tex.get_width(), 1920.0 / tex.get_height())
+		# cover 铺满 1080×2700 设计画布
+		var sw := 1080.0 / tex.get_width()
+		var sh := 2700.0 / tex.get_height()
+		var s := maxf(sw, sh)
+		bg.scale = Vector2(s, s)
+		bg.offset = Vector2((1080.0 - tex.get_width() * s) * 0.5, (2700.0 - tex.get_height() * s) * 0.5)
 
 	path_points = _smooth_path(DataRegistry.MAP["path"], 4)
 	path_len = 0.0
@@ -319,12 +327,12 @@ func _setup_ui() -> void:
 	for lab in [hud_wave, hud_hp, hud_gold]:
 		_apply_label_plate(lab, panel_toast)
 		lab.add_theme_color_override("font_color", Color(0.98, 0.94, 0.82))
-		lab.add_theme_font_size_override("font_size", 28)
+		lab.add_theme_font_size_override("font_size", 34)
 
 	# 提示弹窗
 	_apply_label_plate(toast_label, panel_toast)
 	toast_label.add_theme_color_override("font_color", Color(0.98, 0.94, 0.82))
-	toast_label.add_theme_font_size_override("font_size", 24)
+	toast_label.add_theme_font_size_override("font_size", 30)
 
 	chain_banner.add_theme_color_override("font_outline_color", Color(0.08, 0.06, 0.04, 0.65))
 	chain_banner.add_theme_constant_override("outline_size", 8)
@@ -380,33 +388,33 @@ func _setup_ui() -> void:
 	boss_bar.add_theme_stylebox_override("background", bar_bg)
 	boss_bar.add_theme_stylebox_override("fill", bar_fill)
 
-	# 右上角按钮更大
-	btn_pause.custom_minimum_size = Vector2(96, 96)
-	btn_speed.custom_minimum_size = Vector2(96, 96)
+	# 右上角按钮（触控加大）
+	btn_pause.custom_minimum_size = Vector2(120, 120)
+	btn_speed.custom_minimum_size = Vector2(120, 120)
 	_style_button(btn_pause, btn_style, btn_hover, btn_focus)
 	_style_button(btn_speed, btn_style, btn_hover, btn_focus)
-	_attach_icon(btn_pause, "res://assets/ui/btn_pause.png", 64)
-	_attach_icon(btn_speed, "res://assets/ui/btn_speed.png", 64)
+	_attach_icon(btn_pause, "res://assets/ui/btn_pause.png", 80)
+	_attach_icon(btn_speed, "res://assets/ui/btn_speed.png", 80)
 
 	var sound_btn: Button = get_node_or_null("UI/TopHUD/BtnSound")
 	if sound_btn == null:
 		sound_btn = Button.new()
 		sound_btn.name = "BtnSound"
 		$UI/TopHUD.add_child(sound_btn)
-	sound_btn.custom_minimum_size = Vector2(96, 96)
+	sound_btn.custom_minimum_size = Vector2(120, 120)
 	_style_button(sound_btn, btn_style, btn_hover, btn_focus)
-	_attach_icon(sound_btn, "res://assets/ui/btn_sound.png", 64)
+	_attach_icon(sound_btn, "res://assets/ui/btn_sound.png", 80)
 	sound_btn.pressed.connect(func():
 		_click_feedback(sound_btn)
 		AudioManager.play("click")
 	)
 
-	_attach_icon(btn_upgrade, "res://assets/ui/btn_upgrade.png", 36)
-	_attach_icon(btn_sell, "res://assets/ui/btn_sell.png", 36)
-	_attach_icon($UI/PausePanel/VBox/BtnResume, "res://assets/ui/btn_cta.png", 40)
-	_attach_icon($UI/PausePanel/VBox/BtnRestart, "res://assets/ui/btn_retry.png", 36)
-	_attach_icon($UI/ResultPanel/VBox/BtnRetry, "res://assets/ui/btn_retry.png", 36)
-	_attach_icon($UI/ResultPanel/VBox/BtnHome, "res://assets/ui/btn_home.png", 36)
+	_attach_icon(btn_upgrade, "res://assets/ui/btn_upgrade.png", 48)
+	_attach_icon(btn_sell, "res://assets/ui/btn_sell.png", 48)
+	_attach_icon($UI/PausePanel/VBox/BtnResume, "res://assets/ui/btn_cta.png", 52)
+	_attach_icon($UI/PausePanel/VBox/BtnRestart, "res://assets/ui/btn_retry.png", 48)
+	_attach_icon($UI/ResultPanel/VBox/BtnRetry, "res://assets/ui/btn_retry.png", 48)
+	_attach_icon($UI/ResultPanel/VBox/BtnHome, "res://assets/ui/btn_home.png", 48)
 
 	for b in [
 		btn_pause, btn_speed, sound_btn, btn_upgrade, btn_sell,
@@ -415,30 +423,34 @@ func _setup_ui() -> void:
 	]:
 		_wire_click_fx(b)
 
-	# 面板文字（手机可读）
+	# 面板文字（手机可读，整体加大）
 	for lab in [slot_panel_title, slot_panel_meta, result_title, result_stats]:
 		lab.add_theme_color_override("font_color", Color(0.98, 0.94, 0.82))
-	slot_panel_title.add_theme_font_size_override("font_size", 36)
-	slot_panel_meta.add_theme_font_size_override("font_size", 24)
-	result_title.add_theme_font_size_override("font_size", 44)
-	result_stats.add_theme_font_size_override("font_size", 24)
+	slot_panel_title.add_theme_font_size_override("font_size", 42)
+	slot_panel_meta.add_theme_font_size_override("font_size", 28)
+	result_title.add_theme_font_size_override("font_size", 52)
+	result_stats.add_theme_font_size_override("font_size", 28)
 	slot_panel_meta.add_theme_color_override("font_color", Color(0.9, 0.86, 0.74))
 	slot_panel_meta.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_upgrade.add_theme_font_size_override("font_size", 28)
-	btn_sell.add_theme_font_size_override("font_size", 28)
-	btn_upgrade.custom_minimum_size = Vector2(0, 72)
-	btn_sell.custom_minimum_size = Vector2(0, 72)
-	$UI/PausePanel/VBox/BtnResume.add_theme_font_size_override("font_size", 28)
-	$UI/PausePanel/VBox/BtnRestart.add_theme_font_size_override("font_size", 28)
-	$UI/ResultPanel/VBox/BtnRetry.add_theme_font_size_override("font_size", 28)
-	$UI/ResultPanel/VBox/BtnHome.add_theme_font_size_override("font_size", 28)
+	btn_upgrade.add_theme_font_size_override("font_size", 34)
+	btn_sell.add_theme_font_size_override("font_size", 34)
+	btn_upgrade.custom_minimum_size = Vector2(0, 96)
+	btn_sell.custom_minimum_size = Vector2(0, 96)
+	$UI/PausePanel/VBox/BtnResume.add_theme_font_size_override("font_size", 34)
+	$UI/PausePanel/VBox/BtnRestart.add_theme_font_size_override("font_size", 34)
+	$UI/ResultPanel/VBox/BtnRetry.add_theme_font_size_override("font_size", 34)
+	$UI/ResultPanel/VBox/BtnHome.add_theme_font_size_override("font_size", 34)
+	$UI/PausePanel/VBox/BtnResume.custom_minimum_size = Vector2(0, 96)
+	$UI/PausePanel/VBox/BtnRestart.custom_minimum_size = Vector2(0, 96)
+	$UI/ResultPanel/VBox/BtnRetry.custom_minimum_size = Vector2(0, 96)
+	$UI/ResultPanel/VBox/BtnHome.custom_minimum_size = Vector2(0, 96)
 
 	# 底部灵兽卡：更大立绘 + 边框，避免压住路线中段
 	var card_plate: Texture2D = load("res://assets/ui/panel_dialog.png")
 	for id in DataRegistry.SPIRIT_ORDER:
 		var cfg: Dictionary = DataRegistry.SPIRITS[id]
 		var card := Button.new()
-		card.custom_minimum_size = Vector2(136, 188)
+		card.custom_minimum_size = Vector2(172, 236)
 		card.clip_text = false
 		card.focus_mode = Control.FOCUS_NONE
 		if card_plate:
@@ -466,7 +478,7 @@ func _setup_ui() -> void:
 		icon.texture = load(cfg["sprite"]) if ResourceLoader.exists(cfg["sprite"]) else null
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.custom_minimum_size = Vector2(108, 108)
+		icon.custom_minimum_size = Vector2(136, 136)
 		icon.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(icon)
@@ -474,7 +486,7 @@ func _setup_ui() -> void:
 		var caption := Label.new()
 		caption.text = "%s\n%d" % [cfg["name"], cfg["cost"]]
 		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		caption.add_theme_font_size_override("font_size", 26)
+		caption.add_theme_font_size_override("font_size", 32)
 		caption.add_theme_color_override("font_color", Color(0.98, 0.94, 0.82))
 		caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(caption)

@@ -162,36 +162,38 @@ const REACTIONS := {
 	},
 }
 
-## 镜水涧：路线 + 紧贴路线的塔位（保证 min range 210 内可攻击）
+## 镜水涧：1080×2700（约 9:22.5，覆盖 21:9 及更修长屏）
+## 路线 + 紧贴路线的塔位（保证 min range 210 内可攻击）
 const MAP := {
 	"id": "map.mirror_stream",
 	"name": "镜水涧",
 	"base_hp": 20,
 	"starting_gold": 320,
+	"size": Vector2(1080, 2700),
 	"path": [
-		Vector2(720, 200), Vector2(730, 270), Vector2(640, 330), Vector2(500, 390),
-		Vector2(380, 460), Vector2(330, 540), Vector2(360, 630), Vector2(460, 700),
-		Vector2(580, 760), Vector2(700, 820), Vector2(770, 900), Vector2(760, 980),
-		Vector2(680, 1050), Vector2(560, 1110), Vector2(450, 1180), Vector2(400, 1260),
-		Vector2(420, 1340), Vector2(490, 1400), Vector2(540, 1460),
+		Vector2(720, 281), Vector2(730, 380), Vector2(640, 464), Vector2(500, 548),
+		Vector2(380, 647), Vector2(330, 759), Vector2(360, 886), Vector2(460, 984),
+		Vector2(580, 1069), Vector2(700, 1153), Vector2(770, 1266), Vector2(760, 1378),
+		Vector2(680, 1477), Vector2(560, 1561), Vector2(450, 1659), Vector2(400, 1772),
+		Vector2(420, 1884), Vector2(490, 1969), Vector2(540, 2053),
 	],
-	"base": Vector2(540, 1500),
-	"entry": Vector2(720, 200),
+	"base": Vector2(540, 2109),
+	"entry": Vector2(720, 281),
 	"slots": [
-		{"id": "S1", "pos": Vector2(500, 280), "neighbors": ["S2", "S3"]},
-		{"id": "S2", "pos": Vector2(860, 300), "neighbors": ["S1", "S4"]},
-		{"id": "S3", "pos": Vector2(240, 480), "neighbors": ["S1", "S5"]},
-		{"id": "S4", "pos": Vector2(560, 420), "neighbors": ["S2", "S5", "S6"]},
-		{"id": "S5", "pos": Vector2(300, 720), "neighbors": ["S3", "S4", "S6", "S7"]},
-		{"id": "S6", "pos": Vector2(780, 760), "neighbors": ["S4", "S5", "S8"]},
-		{"id": "S7", "pos": Vector2(400, 1100), "neighbors": ["S5", "S9"]},
-		{"id": "S8", "pos": Vector2(820, 1080), "neighbors": ["S6", "S10"]},
-		{"id": "S9", "pos": Vector2(280, 1260), "neighbors": ["S7", "S10"]},
-		{"id": "S10", "pos": Vector2(620, 1360), "neighbors": ["S8", "S9"]},
+		{"id": "S1", "pos": Vector2(500, 394), "neighbors": ["S2", "S3"]},
+		{"id": "S2", "pos": Vector2(860, 422), "neighbors": ["S1", "S4"]},
+		{"id": "S3", "pos": Vector2(240, 675), "neighbors": ["S1", "S5"]},
+		{"id": "S4", "pos": Vector2(560, 591), "neighbors": ["S2", "S5", "S6"]},
+		{"id": "S5", "pos": Vector2(300, 1012), "neighbors": ["S3", "S4", "S6", "S7"]},
+		{"id": "S6", "pos": Vector2(780, 1069), "neighbors": ["S4", "S5", "S8"]},
+		{"id": "S7", "pos": Vector2(400, 1547), "neighbors": ["S5", "S9"]},
+		{"id": "S8", "pos": Vector2(820, 1519), "neighbors": ["S6", "S10"]},
+		{"id": "S9", "pos": Vector2(280, 1772), "neighbors": ["S7", "S10"]},
+		{"id": "S10", "pos": Vector2(620, 1912), "neighbors": ["S8", "S9"]},
 	],
 	"water_zones": [
-		{"id": "w1", "pos": Vector2(380, 480), "size": Vector2(280, 90)},
-		{"id": "w2", "pos": Vector2(600, 1080), "size": Vector2(240, 100)},
+		{"id": "w1", "pos": Vector2(380, 675), "size": Vector2(280, 127)},
+		{"id": "w2", "pos": Vector2(600, 1519), "size": Vector2(240, 141)},
 	],
 }
 

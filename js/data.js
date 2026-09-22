@@ -280,53 +280,55 @@ export const REACTION_DB = (() => {
   return db;
 })();
 
-/** MapConfig — 镜水涧 */
+/** MapConfig — 镜水涧 · 1080×2700（约 9:22.5，覆盖 21:9 及更修长屏） */
 export const MAP = {
   id: 'map.mirror_stream',
   name: '镜水涧',
   baseHp: 20,
   startingGold: 320,
   width: 1080,
-  height: 1920,
+  height: 2700,
   /** S 形路线：入口偏右上 → 中部过浅水 → 底部灵种 */
   path: [
-    { x: 720, y: 210 },
-    { x: 720, y: 280 },
-    { x: 560, y: 340 },
-    { x: 400, y: 400 },
-    { x: 340, y: 500 },
-    { x: 380, y: 600 },
-    { x: 520, y: 680 },
-    { x: 680, y: 740 },
-    { x: 780, y: 820 },
-    { x: 760, y: 920 },
-    { x: 640, y: 1000 },
-    { x: 500, y: 1080 },
-    { x: 400, y: 1160 },
-    { x: 420, y: 1260 },
-    { x: 520, y: 1340 },
-    { x: 540, y: 1440 },
+    { x: 720, y: 295 },
+    { x: 720, y: 394 },
+    { x: 560, y: 478 },
+    { x: 400, y: 562 },
+    { x: 340, y: 703 },
+    { x: 380, y: 844 },
+    { x: 520, y: 956 },
+    { x: 680, y: 1041 },
+    { x: 780, y: 1153 },
+    { x: 760, y: 1294 },
+    { x: 640, y: 1406 },
+    { x: 500, y: 1519 },
+    { x: 400, y: 1631 },
+    { x: 420, y: 1772 },
+    { x: 520, y: 1884 },
+    { x: 540, y: 2025 },
   ],
-  base: { x: 540, y: 1480 },
-  entry: { x: 720, y: 210 },
+  base: { x: 540, y: 2081 },
+  entry: { x: 720, y: 295 },
   /** 固定塔位 + 邻接（贴近路线，保证 min range 内可命中） */
   slots: [
-    { id: 'S1', x: 480, y: 300, neighborIds: ['S2', 'S3'] },
-    { id: 'S2', x: 830, y: 280, neighborIds: ['S1', 'S4'] },
-    { id: 'S3', x: 250, y: 500, neighborIds: ['S1', 'S5'] },
-    { id: 'S4', x: 520, y: 560, neighborIds: ['S2', 'S5', 'S6'] },
-    { id: 'S5', x: 560, y: 800, neighborIds: ['S3', 'S4', 'S6', 'S7'] },
-    { id: 'S6', x: 880, y: 860, neighborIds: ['S4', 'S5', 'S8'] },
-    { id: 'S7', x: 380, y: 1040, neighborIds: ['S5', 'S9'] },
-    { id: 'S8', x: 760, y: 1080, neighborIds: ['S6', 'S10'] },
-    { id: 'S9', x: 300, y: 1260, neighborIds: ['S7', 'S10'] },
-    { id: 'S10', x: 680, y: 1340, neighborIds: ['S8', 'S9'] },
+    { id: 'S1', x: 480, y: 422, neighborIds: ['S2', 'S3'] },
+    { id: 'S2', x: 830, y: 394, neighborIds: ['S1', 'S4'] },
+    { id: 'S3', x: 250, y: 703, neighborIds: ['S1', 'S5'] },
+    { id: 'S4', x: 520, y: 788, neighborIds: ['S2', 'S5', 'S6'] },
+    { id: 'S5', x: 560, y: 1125, neighborIds: ['S3', 'S4', 'S6', 'S7'] },
+    { id: 'S6', x: 880, y: 1209, neighborIds: ['S4', 'S5', 'S8'] },
+    { id: 'S7', x: 380, y: 1462, neighborIds: ['S5', 'S9'] },
+    { id: 'S8', x: 760, y: 1519, neighborIds: ['S6', 'S10'] },
+    { id: 'S9', x: 300, y: 1772, neighborIds: ['S7', 'S10'] },
+    { id: 'S10', x: 680, y: 1884, neighborIds: ['S8', 'S9'] },
   ],
   /** 天然水域（persistent） */
   waterZones: [
-    { id: 'w1', type: 'NATURAL_WATER', x: 370, y: 470, w: 300, h: 80, persistent: true },
-    { id: 'w2', type: 'NATURAL_WATER', x: 560, y: 1020, w: 260, h: 100, persistent: true },
+    { id: 'w1', type: 'NATURAL_WATER', x: 370, y: 661, w: 300, h: 112, persistent: true },
+    { id: 'w2', type: 'NATURAL_WATER', x: 560, y: 1434, w: 260, h: 141, persistent: true },
   ],
+  /** 背景图（覆盖 9:22.5，可裁切适配 21:9） */
+  background: 'assets/maps/mirror_stream_bg_v2.png',
 };
 
 /** WaveConfig — 8 波 + Boss */
