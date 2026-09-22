@@ -301,8 +301,13 @@ func _setup_ui() -> void:
 	$UI/PausePanel.add_theme_stylebox_override("panel", style)
 	$UI/ResultPanel.add_theme_stylebox_override("panel", style)
 
-	btn_pause.pressed.connect(func(): get_tree().paused = true; pause_panel.visible = true)
+	btn_pause.pressed.connect(func():
+		_click_feedback(btn_pause)
+		get_tree().paused = true
+		pause_panel.visible = true
+	)
 	btn_speed.pressed.connect(func():
+		_click_feedback(btn_speed)
 		battle_speed = 2.0 if battle_speed == 1.0 else 1.0
 		btn_speed.text = "×2" if battle_speed > 1.0 else "×1"
 	)
@@ -342,7 +347,38 @@ func _setup_ui() -> void:
 
 	_style_button(btn_pause, btn_style, btn_hover, btn_focus)
 	_style_button(btn_speed, btn_style, btn_hover, btn_focus)
+	_attach_icon(btn_pause, "res://assets/ui/btn_pause.png")
+	_attach_icon(btn_speed, "res://assets/ui/btn_speed.png")
+	# 音效按钮（场景里若无则动态加）
+	var sound_btn: Button = get_node_or_null("UI/TopHUD/BtnSound")
+	if sound_btn == null:
+		sound_btn = Button.new()
+		sound_btn.name = "BtnSound"
+		sound_btn.custom_minimum_size = Vector2(72, 64)
+		$UI/TopHUD.add_child(sound_btn)
+	_style_button(sound_btn, btn_style, btn_hover, btn_focus)
+	_attach_icon(sound_btn, "res://assets/ui/btn_sound.png")
+	sound_btn.pressed.connect(func():
+		_click_feedback(sound_btn)
+		AudioManager.play("click")
+	)
 
+	_attach_icon($UI/SlotPanel/VBox/Actions/BtnUpgrade, "res://assets/ui/btn_upgrade.png")
+	_attach_icon($UI/SlotPanel/VBox/Actions/BtnSell, "res://assets/ui/btn_sell.png")
+	_attach_icon($UI/PausePanel/VBox/BtnResume, "res://assets/ui/btn_primary.png")
+	_attach_icon($UI/PausePanel/VBox/BtnRestart, "res://assets/ui/btn_retry.png")
+	_attach_icon($UI/ResultPanel/VBox/BtnRetry, "res://assets/ui/btn_retry.png")
+	_attach_icon($UI/ResultPanel/VBox/BtnHome, "res://assets/ui/btn_home.png")
+
+	for b in [
+		btn_pause, btn_speed, sound_btn,
+		$UI/SlotPanel/VBox/Actions/BtnUpgrade, $UI/SlotPanel/VBox/Actions/BtnSell,
+		$UI/PausePanel/VBox/BtnResume, $UI/PausePanel/VBox/BtnRestart,
+		$UI/ResultPanel/VBox/BtnRetry, $UI/ResultPanel/VBox/BtnHome,
+	]:
+		_wire_click_fx(b)
+
+	# 灵兽卡点击弹一下
 	# 底部灵兽卡：立绘按钮
 	for id in DataRegistry.SPIRIT_ORDER:
 		var cfg: Dictionary = DataRegistry.SPIRITS[id]
@@ -375,7 +411,9 @@ func _setup_ui() -> void:
 
 		card.set_meta("spirit_id", id)
 		card.set_meta("caption", caption)
-		card.pressed.connect(_on_card_pressed.bind(id))
+		card.pressed.connect(func(): _on_card_pressed(id))
+		card.button_down.connect(func(): _click_feedback(card, true))
+		card.button_up.connect(func(): _click_feedback(card, false))
 		card_bar.add_child(card)
 
 	_update_hud()
@@ -391,6 +429,32 @@ func _style_button(btn: Button, normal: StyleBoxFlat, hover: StyleBoxFlat, focus
 	btn.add_theme_color_override("font_color", Color(0.93, 0.9, 0.82))
 	btn.add_theme_color_override("font_hover_color", Color(1, 0.95, 0.8))
 	btn.add_theme_color_override("font_pressed_color", Color(1, 0.95, 0.8))
+
+func _attach_icon(btn: Button, path: String) -> void:
+	if not ResourceLoader.exists(path):
+		return
+	btn.icon = load(path)
+	btn.expand_icon = true
+	btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
+	btn.add_theme_constant_override("icon_max_width", 48)
+	btn.add_theme_constant_override("h_separation", 8)
+
+func _wire_click_fx(btn: Button) -> void:
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.button_down.connect(func(): _click_feedback(btn, true))
+	btn.button_up.connect(func(): _click_feedback(btn, false))
+
+func _click_feedback(btn: Button, down: bool = false) -> void:
+	if not is_instance_valid(btn):
+		return
+	var s := 0.9 if down else 1.06
+	var tw := create_tween()
+	tw.tween_property(btn, "scale", Vector2(s, s), 0.06).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if not down:
+		tw.tween_property(btn, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(btn, "modulate", Color(1.15, 1.1, 0.9, 1), 0.05)
+		tw.tween_property(btn, "modulate", Color(1, 1, 1, 1), 0.12)
 
 func _connect_events() -> void:
 	EventBus.gold_changed.connect(func(v): gold = v; _update_hud())
@@ -487,6 +551,7 @@ func _refresh_slot_panel(spirit: Dictionary) -> void:
 func _on_upgrade() -> void:
 	if selected_slot == "":
 		return
+	_click_feedback(btn_upgrade)
 	upgrade_spirit(selected_slot)
 	var slot: Dictionary = slots[selected_slot]
 	if slot["spirit"]:
@@ -496,6 +561,7 @@ func _on_upgrade() -> void:
 func _on_sell() -> void:
 	if selected_slot == "":
 		return
+	_click_feedback(btn_sell)
 	sell_spirit(selected_slot)
 	slot_panel.visible = false
 	selected_slot = ""
