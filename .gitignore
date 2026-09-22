@@ -6,9 +6,15 @@ Thumbs.db
 .vscode/
 .cursor/
 
-# Godot cache / editor state
+# Godot cache / editor state / build outputs
 godot/.godot/
 *.translation
+*.apk
+*.idsig
+*.aab
+*.ipa
+*.zip
+godot/.export/
 
 # Workspace-root AI image drafts (canonical copies live in godot/assets/)
 /generated-*.png
