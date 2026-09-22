@@ -19,6 +19,7 @@ const SPIRITS := {
 		"attack_type": "projectile", "splash": 40.0, "status": "BURN", "status_duration": 2.5,
 		"projectile_speed": 420.0, "upgrade_cost": [50, 90], "upgrade_damage": [8.0, 12.0],
 		"desc": "喷吐火团，命中留下短暂燃烧",
+		"sprite": "res://assets/characters/spirit_red_feather.png",
 	},
 	"spirit.azure_scale": {
 		"id": "spirit.azure_scale", "name": "沧璃", "element": Element.WATER,
@@ -26,6 +27,7 @@ const SPIRITS := {
 		"attack_type": "projectile", "splash": 0.0, "status": "WET", "status_duration": 3.5,
 		"projectile_speed": 380.0, "upgrade_cost": [55, 100], "upgrade_damage": [5.0, 8.0],
 		"desc": "水弹使敌人潮湿并留下水迹",
+		"sprite": "res://assets/characters/spirit_azure_scale.png",
 	},
 	"spirit.thunder_horn": {
 		"id": "spirit.thunder_horn", "name": "雷角", "element": Element.LIGHTNING,
@@ -34,6 +36,7 @@ const SPIRITS := {
 		"prefer_wet": true, "status": "CHARGED", "status_duration": 1.8,
 		"projectile_speed": 0.0, "upgrade_cost": [70, 120], "upgrade_damage": [9.0, 14.0],
 		"desc": "闪电攻击，优先向潮湿目标弹射",
+		"sprite": "res://assets/characters/spirit_thunder_horn.png",
 	},
 	"spirit.wind_fox": {
 		"id": "spirit.wind_fox", "name": "风狸", "element": Element.WIND,
@@ -42,6 +45,7 @@ const SPIRITS := {
 		"status": "GUSTED", "status_duration": 1.5, "projectile_speed": 0.0,
 		"upgrade_cost": [55, 100], "upgrade_damage": [4.0, 6.0],
 		"desc": "风刃并推动扩散已有元素区域",
+		"sprite": "res://assets/characters/spirit_wind_fox.png",
 	},
 	"spirit.frost_fox": {
 		"id": "spirit.frost_fox", "name": "霜狐", "element": Element.ICE,
@@ -49,6 +53,7 @@ const SPIRITS := {
 		"attack_type": "projectile", "splash": 0.0, "status": "CHILL", "status_duration": 2.8,
 		"projectile_speed": 400.0, "upgrade_cost": [55, 100], "upgrade_damage": [5.0, 9.0],
 		"desc": "冰刺减速，潮湿目标更易冻结",
+		"sprite": "res://assets/characters/spirit_frost_fox.png",
 	},
 }
 
@@ -60,29 +65,34 @@ const SPIRIT_ORDER := [
 const ENEMIES := {
 	"enemy.ink_blob": {
 		"id": "enemy.ink_blob", "name": "墨团", "max_hp": 80.0, "speed": 70.0,
-		"reward": 8, "radius": 24.0, "tag": "normal", "color": Color("1a1a1a"),
+		"reward": 8, "radius": 28.0, "tag": "normal", "color": Color("1a1a1a"),
 		"accent": Color("c23b2e"), "is_boss": false,
+		"sprite": "res://assets/enemies/enemy_ink_blob.png",
 	},
 	"enemy.ink_hound": {
 		"id": "enemy.ink_hound", "name": "蚀犬", "max_hp": 55.0, "speed": 110.0,
-		"reward": 9, "radius": 20.0, "tag": "fast", "color": Color("141414"),
+		"reward": 9, "radius": 24.0, "tag": "fast", "color": Color("141414"),
 		"accent": Color("e04040"), "is_boss": false,
+		"sprite": "res://assets/enemies/enemy_ink_hound.png",
 	},
 	"enemy.ink_shell": {
 		"id": "enemy.ink_shell", "name": "甲蚀", "max_hp": 220.0, "speed": 48.0,
-		"reward": 16, "radius": 30.0, "tag": "tank", "color": Color("0f0f0f"),
+		"reward": 16, "radius": 34.0, "tag": "tank", "color": Color("0f0f0f"),
 		"accent": Color("8a8a8a"), "is_boss": false,
+		"sprite": "res://assets/enemies/enemy_ink_shell.png",
 	},
 	"enemy.ink_worm": {
 		"id": "enemy.ink_worm", "name": "吞灵虫", "max_hp": 32.0, "speed": 82.0,
-		"reward": 4, "radius": 14.0, "tag": "swarm", "color": Color("1c1c1c"),
+		"reward": 4, "radius": 16.0, "tag": "swarm", "color": Color("1c1c1c"),
 		"accent": Color("666666"), "is_boss": false,
+		"sprite": "res://assets/enemies/enemy_ink_worm.png",
 	},
 	"enemy.ink_tiger": {
 		"id": "enemy.ink_tiger", "name": "蚀山君", "max_hp": 1800.0, "speed": 38.0,
-		"reward": 150, "radius": 52.0, "tag": "boss", "color": Color("0a0a0a"),
+		"reward": 150, "radius": 58.0, "tag": "boss", "color": Color("0a0a0a"),
 		"accent": Color("d0d0d0"), "is_boss": true,
 		"charge_interval": 8.0, "summon_interval": 12.0,
+		"sprite": "res://assets/enemies/enemy_ink_tiger.png",
 	},
 }
 
@@ -129,28 +139,28 @@ const MAP := {
 	"base_hp": 20,
 	"starting_gold": 320,
 	"path": [
-		Vector2(720, 210), Vector2(720, 280), Vector2(560, 340), Vector2(400, 400),
-		Vector2(340, 500), Vector2(380, 600), Vector2(520, 680), Vector2(680, 740),
-		Vector2(780, 820), Vector2(760, 920), Vector2(640, 1000), Vector2(500, 1080),
-		Vector2(400, 1160), Vector2(420, 1260), Vector2(520, 1340), Vector2(540, 1440),
+		Vector2(720, 200), Vector2(720, 280), Vector2(580, 350), Vector2(420, 420),
+		Vector2(340, 520), Vector2(360, 620), Vector2(480, 700), Vector2(640, 770),
+		Vector2(760, 850), Vector2(780, 950), Vector2(680, 1040), Vector2(540, 1120),
+		Vector2(420, 1200), Vector2(400, 1290), Vector2(480, 1370), Vector2(540, 1450),
 	],
-	"base": Vector2(540, 1480),
-	"entry": Vector2(720, 210),
+	"base": Vector2(540, 1500),
+	"entry": Vector2(720, 200),
 	"slots": [
-		{"id": "S1", "pos": Vector2(480, 300), "neighbors": ["S2", "S3"]},
-		{"id": "S2", "pos": Vector2(830, 280), "neighbors": ["S1", "S4"]},
-		{"id": "S3", "pos": Vector2(250, 500), "neighbors": ["S1", "S5"]},
-		{"id": "S4", "pos": Vector2(520, 560), "neighbors": ["S2", "S5", "S6"]},
-		{"id": "S5", "pos": Vector2(560, 800), "neighbors": ["S3", "S4", "S6", "S7"]},
-		{"id": "S6", "pos": Vector2(880, 860), "neighbors": ["S4", "S5", "S8"]},
-		{"id": "S7", "pos": Vector2(380, 1040), "neighbors": ["S5", "S9"]},
-		{"id": "S8", "pos": Vector2(760, 1080), "neighbors": ["S6", "S10"]},
-		{"id": "S9", "pos": Vector2(300, 1260), "neighbors": ["S7", "S10"]},
-		{"id": "S10", "pos": Vector2(680, 1340), "neighbors": ["S8", "S9"]},
+		{"id": "S1", "pos": Vector2(500, 280), "neighbors": ["S2", "S3"]},
+		{"id": "S2", "pos": Vector2(860, 300), "neighbors": ["S1", "S4"]},
+		{"id": "S3", "pos": Vector2(240, 480), "neighbors": ["S1", "S5"]},
+		{"id": "S4", "pos": Vector2(560, 420), "neighbors": ["S2", "S5", "S6"]},
+		{"id": "S5", "pos": Vector2(300, 720), "neighbors": ["S3", "S4", "S6", "S7"]},
+		{"id": "S6", "pos": Vector2(780, 760), "neighbors": ["S4", "S5", "S8"]},
+		{"id": "S7", "pos": Vector2(400, 1100), "neighbors": ["S5", "S9"]},
+		{"id": "S8", "pos": Vector2(820, 1080), "neighbors": ["S6", "S10"]},
+		{"id": "S9", "pos": Vector2(280, 1260), "neighbors": ["S7", "S10"]},
+		{"id": "S10", "pos": Vector2(620, 1360), "neighbors": ["S8", "S9"]},
 	],
 	"water_zones": [
-		{"id": "w1", "pos": Vector2(370, 470), "size": Vector2(300, 80)},
-		{"id": "w2", "pos": Vector2(560, 1020), "size": Vector2(260, 100)},
+		{"id": "w1", "pos": Vector2(380, 480), "size": Vector2(280, 90)},
+		{"id": "w2", "pos": Vector2(600, 1080), "size": Vector2(240, 100)},
 	],
 }
 

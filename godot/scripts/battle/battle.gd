@@ -92,23 +92,54 @@ func _setup_map() -> void:
 	_draw_base()
 
 func _draw_path() -> void:
-	var line := Line2D.new()
-	line.points = path_points
-	line.width = 72.0
-	line.default_color = Color("8a7a62")
-	line.joint_mode = Line2D.LINE_JOINT_ROUND
-	line.begin_cap_mode = Line2D.LINE_CAP_ROUND
-	line.end_cap_mode = Line2D.LINE_CAP_ROUND
-	path_layer.add_child(line)
+	# 路基描边（更清晰）
+	var outline := Line2D.new()
+	outline.points = path_points
+	outline.width = 96.0
+	outline.default_color = Color(0.22, 0.18, 0.12, 0.55)
+	outline.joint_mode = Line2D.LINE_JOINT_ROUND
+	outline.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	outline.end_cap_mode = Line2D.LINE_CAP_ROUND
+	path_layer.add_child(outline)
 
-	var top := Line2D.new()
-	top.points = path_points
-	top.width = 58.0
-	top.default_color = Color("c4b49a")
-	top.joint_mode = Line2D.LINE_JOINT_ROUND
-	top.begin_cap_mode = Line2D.LINE_CAP_ROUND
-	top.end_cap_mode = Line2D.LINE_CAP_ROUND
-	path_layer.add_child(top)
+	# 路面 + 可选纹理
+	var road := Line2D.new()
+	road.points = path_points
+	road.width = 72.0
+	road.default_color = Color("c4b49a")
+	road.joint_mode = Line2D.LINE_JOINT_ROUND
+	road.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	road.end_cap_mode = Line2D.LINE_CAP_ROUND
+	var ptex: Texture2D = load("res://assets/maps/path_texture.png")
+	if ptex:
+		road.texture = ptex
+		road.texture_mode = Line2D.LINE_TEXTURE_TILE
+		road.width = 78.0
+	path_layer.add_child(road)
+
+	# 内侧亮边
+	var inner := Line2D.new()
+	inner.points = path_points
+	inner.width = 52.0
+	inner.default_color = Color(0.86, 0.80, 0.68, 0.35)
+	inner.joint_mode = Line2D.LINE_JOINT_ROUND
+	inner.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	inner.end_cap_mode = Line2D.LINE_CAP_ROUND
+	path_layer.add_child(inner)
+
+	# 入口标记
+	var entry: Vector2 = DataRegistry.MAP["entry"]
+	var mark := _blob(Color("2a2a2a"), 22.0, 22.0)
+	mark.position = entry
+	path_layer.add_child(mark)
+	var mark2 := _blob(Color("c23b2e"), 10.0, 10.0)
+	mark2.position = entry
+	path_layer.add_child(mark2)
+	var elabel := Label.new()
+	elabel.text = "入口"
+	elabel.position = entry + Vector2(-24, -52)
+	elabel.add_theme_font_size_override("font_size", 22)
+	path_layer.add_child(elabel)
 
 func _draw_base() -> void:
 	var base: Vector2 = DataRegistry.MAP["base"]
@@ -151,16 +182,20 @@ func _setup_slots() -> void:
 		body.input_event.connect(_on_slot_input.bind(s["id"]))
 		slot_layer.add_child(body)
 
-		var ring := _make_ring(Color(1, 1, 1, 0.25), 30.0, 2.0)
+		var ring := _make_ring(Color(1, 1, 1, 0.28), 38.0, 3.0)
 		ring.position = s["pos"]
 		ring.set_meta("slot_visual", s["id"])
 		slot_layer.add_child(ring)
+		# 塔座
+		var pad := _blob(Color(0.2, 0.18, 0.14, 0.35), 34.0, 14.0)
+		pad.position = s["pos"] + Vector2(0, 8)
+		slot_layer.add_child(pad)
 
 		var label := Label.new()
 		label.text = s["id"]
-		label.position = s["pos"] + Vector2(-12, -10)
+		label.position = s["pos"] + Vector2(-14, 28)
 		label.add_theme_font_size_override("font_size", 18)
-		label.modulate = Color(1, 1, 1, 0.4)
+		label.modulate = Color(1, 1, 1, 0.45)
 		label.set_meta("slot_label", s["id"])
 		slot_layer.add_child(label)
 
@@ -283,7 +318,7 @@ func _on_slot_selected(slot_id: String) -> void:
 		slot_panel.visible = false
 		return
 	var slot: Dictionary = slots[slot_id]
-	var spirit: Dictionary = slot["spirit"]
+	var spirit = slot["spirit"]
 	if spirit == null:
 		slot_panel_title.text = "空塔位 %s" % slot_id
 		slot_panel_meta.text = "先点下方灵兽卡，再点塔位放置"
@@ -361,7 +396,7 @@ func get_upgrade_cost(spirit: Dictionary):
 
 func upgrade_spirit(slot_id: String) -> bool:
 	var slot: Dictionary = slots[slot_id]
-	var spirit: Dictionary = slot["spirit"]
+	var spirit = slot["spirit"]
 	if spirit == null:
 		return false
 	var cost = get_upgrade_cost(spirit)
@@ -378,7 +413,7 @@ func upgrade_spirit(slot_id: String) -> bool:
 
 func sell_spirit(slot_id: String) -> bool:
 	var slot: Dictionary = slots[slot_id]
-	var spirit: Dictionary = slot["spirit"]
+	var spirit = slot["spirit"]
 	if spirit == null:
 		return false
 	var refund: int = int(spirit["config"]["cost"] * 0.5) + (spirit["level"] - 1) * 20
@@ -457,17 +492,34 @@ func _refresh_slot_visuals() -> void:
 func _spawn_spirit_visual(spirit: Dictionary) -> void:
 	var root := Node2D.new()
 	root.position = spirit["pos"]
-	var col := DataRegistry.element_color(spirit["element"])
-	var body := _blob(col, 28.0, 24.0)
-	root.add_child(body)
-	var head := _blob(col, 18.0, 18.0, Vector2(0, -18))
-	root.add_child(head)
-	var eye := _blob(Color("1a1a1a"), 3.0, 3.0, Vector2(-5, -18))
-	root.add_child(eye)
-	var eye2 := _blob(Color("1a1a1a"), 3.0, 3.0, Vector2(5, -18))
-	root.add_child(eye2)
+	# 元素色底座光环
+	var pedestal := _make_ring(DataRegistry.element_color(spirit["element"]), 40.0, 3.0)
+	pedestal.default_color.a = 0.55
+	root.add_child(pedestal)
+	var glow := _blob(DataRegistry.element_color(spirit["element"]), 36.0, 12.0, Vector2(0, 22))
+	glow.color.a = 0.35
+	root.add_child(glow)
+
+	var spr := Sprite2D.new()
+	var path: String = spirit["config"].get("sprite", "")
+	if path != "" and ResourceLoader.exists(path):
+		spr.texture = load(path)
+		# 约 110px 宽，保证小图可读
+		var tw: float = maxf(spr.texture.get_width(), 1.0)
+		var s := 110.0 / tw
+		spr.scale = Vector2(s, s)
+		spr.offset = Vector2(0, -spr.texture.get_height() * s * 0.5)
+	else:
+		var col := DataRegistry.element_color(spirit["element"])
+		var body := _blob(col, 30.0, 26.0)
+		root.add_child(body)
+		var head := _blob(col, 20.0, 20.0, Vector2(0, -20))
+		root.add_child(head)
 	spirit_layer.add_child(root)
 	spirit["visual"] = root
+	spirit["sprite"] = spr
+	if spr.texture:
+		root.add_child(spr)
 
 func _blob(color: Color, rx: float, ry: float, offset: Vector2 = Vector2.ZERO) -> Polygon2D:
 	var p := Polygon2D.new()
@@ -503,17 +555,41 @@ func _spawn_zone_visual(zone: Dictionary) -> void:
 func _spawn_enemy_visual(enemy: Dictionary) -> void:
 	var root := Node2D.new()
 	root.position = enemy["pos"]
-	var body := _blob(enemy["config"]["color"], enemy["radius"], enemy["radius"] * 0.9)
-	root.add_child(body)
-	if enemy["config"]["is_boss"]:
-		var mask := _blob(Color("d0d0d0"), enemy["radius"] * 0.5, enemy["radius"] * 0.4, Vector2(0, -4))
-		root.add_child(mask)
-	var eye := _blob(enemy["config"]["accent"], 4.0, 4.0, Vector2(-7, -2))
-	root.add_child(eye)
-	var eye2 := _blob(enemy["config"]["accent"], 4.0, 4.0, Vector2(7, -2))
-	root.add_child(eye2)
+	# 地面阴影
+	var shadow := _blob(Color(0, 0, 0, 0.25), enemy["radius"] * 1.1, enemy["radius"] * 0.4, Vector2(0, enemy["radius"] * 0.35))
+	root.add_child(shadow)
+
+	var spr := Sprite2D.new()
+	var spath: String = enemy["config"].get("sprite", "")
+	if spath != "" and ResourceLoader.exists(spath):
+		spr.texture = load(spath)
+		var target_w: float = enemy["radius"] * 2.4
+		if enemy["config"]["is_boss"]:
+			target_w = enemy["radius"] * 2.6
+		elif enemy["config"]["tag"] == "swarm":
+			target_w = enemy["radius"] * 2.2
+		var tw: float = maxf(spr.texture.get_width(), 1.0)
+		var s := target_w / tw
+		spr.scale = Vector2(s, s)
+		spr.offset = Vector2(0, -spr.texture.get_height() * s * 0.45)
+		root.add_child(spr)
+	else:
+		var body := _blob(enemy["config"]["color"], enemy["radius"], enemy["radius"] * 0.9)
+		root.add_child(body)
+		var eye := _blob(enemy["config"]["accent"], 4.0, 4.0, Vector2(-7, -2))
+		root.add_child(eye)
+		var eye2 := _blob(enemy["config"]["accent"], 4.0, 4.0, Vector2(7, -2))
+		root.add_child(eye2)
+
+	# 状态染色环（元素表现）
+	var status := _make_ring(Color(1, 1, 1, 0.0), enemy["radius"] + 6.0, 3.0)
+	status.set_meta("status_ring", true)
+	root.add_child(status)
+
 	enemy_layer.add_child(root)
 	enemy["visual"] = root
+	enemy["sprite"] = spr
+	enemy["status_ring"] = status
 
 func _burst(pos: Vector2, color: Color, n: int) -> void:
 	for i in n:
@@ -1028,9 +1104,25 @@ func _update_enemies(dt: float) -> void:
 		e["pos"] = _point_on_path(e["progress"])
 		if e.has("visual") and is_instance_valid(e["visual"]):
 			e["visual"].position = e["pos"]
+		_update_status_tint(e)
 		if e["is_boss"]:
 			_update_boss(e, dt)
 	enemies = enemies.filter(func(e): return e["alive"])
+
+func _update_status_tint(e) -> void:
+	if not e.has("status_ring") or not is_instance_valid(e["status_ring"]):
+		return
+	var ring: Line2D = e["status_ring"]
+	var now := Time.get_ticks_msec() / 1000.0
+	if now < e["frozen_until"]:
+		ring.default_color = Color(0.66, 0.83, 0.91, 0.85)
+	elif e["element"] >= 0:
+		ring.default_color = DataRegistry.element_color(e["element"])
+		ring.default_color.a = 0.55
+	elif now < e["burn_until"]:
+		ring.default_color = Color(0.91, 0.36, 0.23, 0.45)
+	else:
+		ring.default_color = Color(1, 1, 1, 0.0)
 
 func _reach_base(e) -> void:
 	e["reached"] = true
