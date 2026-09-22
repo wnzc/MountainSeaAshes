@@ -85,10 +85,23 @@
 
 .spirit-card {
   transition: transform 0.1s ease;
+  width: 86px;
+  height: 120px;
+  border: 2px solid rgba(212, 168, 75, 0.55);
 }
+.spirit-card .card-name { font-size: 18px; }
+.spirit-card .card-cost { font-size: 16px; }
 .spirit-card:active, .spirit-card.is-press {
   transform: scale(0.92);
 }
+
+#slot-panel {
+  bottom: 150px;
+  border: 2px solid rgba(212, 168, 75, 0.5);
+}
+.panel-title { font-size: 24px; }
+.panel-meta { font-size: 17px; }
+.panel-actions button { font-size: 20px; padding: 16px 12px; min-height: 56px; }
 
 .slot-base {
   transition: transform 0.15s ease;

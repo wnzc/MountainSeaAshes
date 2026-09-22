@@ -415,38 +415,67 @@ func _setup_ui() -> void:
 	]:
 		_wire_click_fx(b)
 
-	# 面板文字浅色
+	# 面板文字（手机可读）
 	for lab in [slot_panel_title, slot_panel_meta, result_title, result_stats]:
 		lab.add_theme_color_override("font_color", Color(0.98, 0.94, 0.82))
-	slot_panel_meta.add_theme_color_override("font_color", Color(0.85, 0.8, 0.68))
+	slot_panel_title.add_theme_font_size_override("font_size", 36)
+	slot_panel_meta.add_theme_font_size_override("font_size", 24)
+	result_title.add_theme_font_size_override("font_size", 44)
+	result_stats.add_theme_font_size_override("font_size", 24)
+	slot_panel_meta.add_theme_color_override("font_color", Color(0.9, 0.86, 0.74))
+	slot_panel_meta.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn_upgrade.add_theme_font_size_override("font_size", 28)
+	btn_sell.add_theme_font_size_override("font_size", 28)
+	btn_upgrade.custom_minimum_size = Vector2(0, 72)
+	btn_sell.custom_minimum_size = Vector2(0, 72)
+	$UI/PausePanel/VBox/BtnResume.add_theme_font_size_override("font_size", 28)
+	$UI/PausePanel/VBox/BtnRestart.add_theme_font_size_override("font_size", 28)
+	$UI/ResultPanel/VBox/BtnRetry.add_theme_font_size_override("font_size", 28)
+	$UI/ResultPanel/VBox/BtnHome.add_theme_font_size_override("font_size", 28)
 
-	# 底部灵兽卡：立绘按钮
+	# 底部灵兽卡：更大立绘 + 边框，避免压住路线中段
+	var card_plate: Texture2D = load("res://assets/ui/panel_dialog.png")
 	for id in DataRegistry.SPIRIT_ORDER:
 		var cfg: Dictionary = DataRegistry.SPIRITS[id]
 		var card := Button.new()
-		card.custom_minimum_size = Vector2(108, 140)
+		card.custom_minimum_size = Vector2(136, 188)
 		card.clip_text = false
 		card.focus_mode = Control.FOCUS_NONE
-		_style_button(card, btn_style, btn_hover, btn_focus)
+		if card_plate:
+			var csb := StyleBoxTexture.new()
+			csb.texture = card_plate
+			csb.texture_margin_left = 28
+			csb.texture_margin_right = 28
+			csb.texture_margin_top = 28
+			csb.texture_margin_bottom = 28
+			csb.content_margin_left = 10
+			csb.content_margin_right = 10
+			csb.content_margin_top = 8
+			csb.content_margin_bottom = 8
+			for st in ["normal", "hover", "pressed", "focus", "disabled"]:
+				card.add_theme_stylebox_override(st, csb)
+		else:
+			_style_button(card, btn_style, btn_hover, btn_focus)
 		var box := VBoxContainer.new()
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.set_anchors_preset(Control.PRESET_FULL_RECT)
+		box.alignment = BoxContainer.ALIGNMENT_CENTER
 		card.add_child(box)
 
 		var icon := TextureRect.new()
 		icon.texture = load(cfg["sprite"]) if ResourceLoader.exists(cfg["sprite"]) else null
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.custom_minimum_size = Vector2(88, 88)
+		icon.custom_minimum_size = Vector2(108, 108)
 		icon.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(icon)
 
 		var caption := Label.new()
-		caption.text = "%s  %d" % [cfg["name"], cfg["cost"]]
+		caption.text = "%s\n%d" % [cfg["name"], cfg["cost"]]
 		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		caption.add_theme_font_size_override("font_size", 18)
-		caption.add_theme_color_override("font_color", Color(0.95, 0.92, 0.82))
+		caption.add_theme_font_size_override("font_size", 26)
+		caption.add_theme_color_override("font_color", Color(0.98, 0.94, 0.82))
 		caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(caption)
 
@@ -617,7 +646,7 @@ func _refresh_slot_panel(spirit: Dictionary) -> void:
 	var cfg: Dictionary = spirit["config"]
 	var el: int = cfg["element"]
 	slot_panel_title.text = "%s %s  Lv.%d" % [DataRegistry.element_name(el), cfg["name"], spirit["level"]]
-	slot_panel_meta.text = "%s\n伤害 %d · 范围 %d · 共鸣 ×%.2f" % [
+	slot_panel_meta.text = "%s\n伤害 %d   范围 %d   共鸣 ×%.2f" % [
 		cfg["desc"], int(spirit["damage"]), int(spirit["range"]), spirit["resonance_bonus"]
 	]
 	var up = get_upgrade_cost(spirit)
