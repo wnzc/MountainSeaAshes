@@ -20,6 +20,8 @@ const SPIRITS := {
 		"projectile_speed": 420.0, "upgrade_cost": [50, 90], "upgrade_damage": [8.0, 12.0],
 		"desc": "喷吐火团，命中留下短暂燃烧",
 		"sprite": "res://assets/characters/spirit_red_feather.png",
+		"skill": "fireball",
+		"skill_color": Color("ff8a4a"),
 	},
 	"spirit.azure_scale": {
 		"id": "spirit.azure_scale", "name": "沧璃", "element": Element.WATER,
@@ -28,6 +30,8 @@ const SPIRITS := {
 		"projectile_speed": 380.0, "upgrade_cost": [55, 100], "upgrade_damage": [5.0, 8.0],
 		"desc": "水弹使敌人潮湿并留下水迹",
 		"sprite": "res://assets/characters/spirit_azure_scale.png",
+		"skill": "water_orb",
+		"skill_color": Color("5ec4de"),
 	},
 	"spirit.thunder_horn": {
 		"id": "spirit.thunder_horn", "name": "雷角", "element": Element.LIGHTNING,
@@ -37,6 +41,8 @@ const SPIRITS := {
 		"projectile_speed": 0.0, "upgrade_cost": [70, 120], "upgrade_damage": [9.0, 14.0],
 		"desc": "闪电攻击，优先向潮湿目标弹射",
 		"sprite": "res://assets/characters/spirit_thunder_horn.png",
+		"skill": "thunder_beam",
+		"skill_color": Color("b39cff"),
 	},
 	"spirit.wind_fox": {
 		"id": "spirit.wind_fox", "name": "风狸", "element": Element.WIND,
@@ -46,6 +52,8 @@ const SPIRITS := {
 		"upgrade_cost": [55, 100], "upgrade_damage": [4.0, 6.0],
 		"desc": "风刃并推动扩散已有元素区域",
 		"sprite": "res://assets/characters/spirit_wind_fox.png",
+		"skill": "wind_pulse",
+		"skill_color": Color("8fd9b0"),
 	},
 	"spirit.frost_fox": {
 		"id": "spirit.frost_fox", "name": "霜狐", "element": Element.ICE,
@@ -54,6 +62,8 @@ const SPIRITS := {
 		"projectile_speed": 400.0, "upgrade_cost": [55, 100], "upgrade_damage": [5.0, 9.0],
 		"desc": "冰刺减速，潮湿目标更易冻结",
 		"sprite": "res://assets/characters/spirit_frost_fox.png",
+		"skill": "ice_shard",
+		"skill_color": Color("c9ecff"),
 	},
 }
 

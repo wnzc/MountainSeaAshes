@@ -182,20 +182,29 @@ func _setup_slots() -> void:
 		body.input_event.connect(_on_slot_input.bind(s["id"]))
 		slot_layer.add_child(body)
 
-		var ring := _make_ring(Color(1, 1, 1, 0.28), 38.0, 3.0)
-		ring.position = s["pos"]
+		var ring := _make_ring(Color(1, 1, 1, 0.15), 44.0, 2.0)
+		ring.position = s["pos"] + Vector2(0, 10)
 		ring.set_meta("slot_visual", s["id"])
 		slot_layer.add_child(ring)
-		# 塔座
-		var pad := _blob(Color(0.2, 0.18, 0.14, 0.35), 34.0, 14.0)
-		pad.position = s["pos"] + Vector2(0, 8)
-		slot_layer.add_child(pad)
+
+		# 灵兽底座（放置位）
+		var base_spr := Sprite2D.new()
+		var btex: Texture2D = load("res://assets/ui/tower_base.png")
+		if btex:
+			base_spr.texture = btex
+			var bs := 96.0 / maxf(btex.get_width(), 1.0)
+			base_spr.scale = Vector2(bs, bs)
+			base_spr.offset = Vector2(0, -btex.get_height() * bs * 0.15)
+		base_spr.position = s["pos"] + Vector2(0, 8)
+		base_spr.modulate = Color(1, 1, 1, 0.92)
+		base_spr.set_meta("slot_base", s["id"])
+		slot_layer.add_child(base_spr)
 
 		var label := Label.new()
 		label.text = s["id"]
-		label.position = s["pos"] + Vector2(-14, 28)
+		label.position = s["pos"] + Vector2(-14, 36)
 		label.add_theme_font_size_override("font_size", 18)
-		label.modulate = Color(1, 1, 1, 0.45)
+		label.modulate = Color(1, 1, 1, 0.4)
 		label.set_meta("slot_label", s["id"])
 		slot_layer.add_child(label)
 
@@ -480,46 +489,72 @@ func _refresh_slot_visuals() -> void:
 			var sid: String = c.get_meta("slot_visual")
 			var slot: Dictionary = slots[sid]
 			if slot["spirit"]:
-				c.default_color = Color(1, 1, 1, 0.08)
+				c.default_color = Color(1, 1, 1, 0.05)
 			elif selected_card != "" and gold >= DataRegistry.SPIRITS[selected_card]["cost"]:
 				c.default_color = Color(1.0, 0.82, 0.35, 0.7)
 			elif selected_slot == sid:
 				c.default_color = Color(1.0, 0.82, 0.35, 0.9)
 			else:
-				c.default_color = Color(1, 1, 1, 0.22)
+				c.default_color = Color(1, 1, 1, 0.12)
+		if c is Sprite2D and c.has_meta("slot_base"):
+			var sid2: String = c.get_meta("slot_base")
+			var slot2: Dictionary = slots[sid2]
+			if slot2["spirit"]:
+				c.modulate = Color(1, 1, 1, 0.75)
+			elif selected_card != "" and gold >= DataRegistry.SPIRITS[selected_card]["cost"]:
+				c.modulate = Color(1.0, 0.95, 0.75, 1.0)
+			else:
+				c.modulate = Color(1, 1, 1, 0.92)
 
 # ─── 视觉 ────────────────────────────────────────────────
 func _spawn_spirit_visual(spirit: Dictionary) -> void:
 	var root := Node2D.new()
-	root.position = spirit["pos"]
-	# 元素色底座光环
-	var pedestal := _make_ring(DataRegistry.element_color(spirit["element"]), 40.0, 3.0)
-	pedestal.default_color.a = 0.55
-	root.add_child(pedestal)
-	var glow := _blob(DataRegistry.element_color(spirit["element"]), 36.0, 12.0, Vector2(0, 22))
-	glow.color.a = 0.35
+	root.position = spirit["pos"] + Vector2(0, -6)
+
+	var col := DataRegistry.element_color(spirit["element"])
+	var glow := _blob(col, 40.0, 12.0, Vector2(0, 28))
+	glow.color.a = 0.28
 	root.add_child(glow)
+
+	var halo := _make_ring(col, 36.0, 2.5)
+	halo.position = Vector2(0, 26)
+	halo.default_color.a = 0.35
+	root.add_child(halo)
 
 	var spr := Sprite2D.new()
 	var path: String = spirit["config"].get("sprite", "")
 	if path != "" and ResourceLoader.exists(path):
 		spr.texture = load(path)
-		# 约 110px 宽，保证小图可读
 		var tw: float = maxf(spr.texture.get_width(), 1.0)
-		var s := 110.0 / tw
+		var s := 118.0 / tw
 		spr.scale = Vector2(s, s)
-		spr.offset = Vector2(0, -spr.texture.get_height() * s * 0.5)
+		spr.offset = Vector2(0, -spr.texture.get_height() * s * 0.52)
 	else:
-		var col := DataRegistry.element_color(spirit["element"])
 		var body := _blob(col, 30.0, 26.0)
 		root.add_child(body)
 		var head := _blob(col, 20.0, 20.0, Vector2(0, -20))
 		root.add_child(head)
+	root.add_child(spr)
+
+	# 元素待机粒子容器
+	var fx := Node2D.new()
+	root.add_child(fx)
+
 	spirit_layer.add_child(root)
 	spirit["visual"] = root
 	spirit["sprite"] = spr
-	if spr.texture:
-		root.add_child(spr)
+	spirit["glow"] = glow
+	spirit["halo"] = halo
+	spirit["fx"] = fx
+	spirit["anim"] = {
+		"t": randf() * TAU,
+		"attack_t": -1.0,
+		"attack_dur": 0.4,
+		"facing": 1.0,
+		"idle_particle_cd": randf_range(0.0, 0.4),
+		"base_y": root.position.y,
+		"base_scale": spr.scale if spr.texture else Vector2.ONE,
+	}
 
 func _blob(color: Color, rx: float, ry: float, offset: Vector2 = Vector2.ZERO) -> Polygon2D:
 	var p := Polygon2D.new()
@@ -707,13 +742,103 @@ func _spawn_enemy(enemy_id: String) -> void:
 func _update_spirits(dt: float) -> void:
 	for spirit in spirits:
 		spirit["cd"] -= dt
+		var target = _find_target(spirit)
+		_update_spirit_anim(spirit, dt, target)
 		if spirit["cd"] > 0.0:
 			continue
-		var target = _find_target(spirit)
 		if target == null:
 			continue
 		spirit["cd"] = spirit["config"]["attack_interval"]
 		_spirit_attack(spirit, target)
+
+## 待机 / 攻击动画
+func _update_spirit_anim(spirit: Dictionary, dt: float, target) -> void:
+	if not spirit.has("anim") or not spirit.has("visual") or not is_instance_valid(spirit["visual"]):
+		return
+	var anim: Dictionary = spirit["anim"]
+	var root: Node2D = spirit["visual"]
+	anim["t"] += dt
+
+	# 攻击窗口
+	if anim["attack_t"] >= 0.0:
+		anim["attack_t"] += dt
+		var k: float = anim["attack_t"] / maxf(anim["attack_dur"], 0.01)
+		_play_attack_pose(spirit, anim, k, target)
+		if anim["attack_t"] >= anim["attack_dur"]:
+			anim["attack_t"] = -1.0
+
+	# 待机：呼吸起伏 + 元素粒子（无目标时更明显）
+	var bob: float = sin(anim["t"] * 2.6) * 3.5
+	var breathe: float = 1.0 + sin(anim["t"] * 3.1) * 0.035
+	if anim["attack_t"] < 0.0:
+		root.position.y = anim["base_y"] + bob
+		if spirit.has("sprite") and is_instance_valid(spirit["sprite"]) and spirit["sprite"].texture:
+			spirit["sprite"].scale = anim["base_scale"] * breathe
+		if spirit.has("glow") and is_instance_valid(spirit["glow"]):
+			spirit["glow"].color.a = 0.22 + 0.08 * (0.5 + 0.5 * sin(anim["t"] * 2.0))
+		if spirit.has("halo") and is_instance_valid(spirit["halo"]):
+			spirit["halo"].rotation = anim["t"] * 0.4
+
+	anim["idle_particle_cd"] -= dt
+	if anim["idle_particle_cd"] <= 0.0:
+		anim["idle_particle_cd"] = 0.35 if target == null else 0.8
+		_idle_particle(spirit)
+
+func _play_attack_pose(spirit: Dictionary, anim: Dictionary, k: float, target) -> void:
+	var root: Node2D = spirit["visual"]
+	var spr = spirit.get("sprite")
+	# 朝向目标
+	if target != null and target.has("pos"):
+		anim["facing"] = 1.0 if target["pos"].x >= spirit["pos"].x else -1.0
+	var face: float = anim["facing"]
+
+	# 前摇 0-0.35 蓄力压缩，0.35-0.55 发射前挺，0.55-1 回弹
+	var sx := 1.0
+	var sy := 1.0
+	var y_off := 0.0
+	if k < 0.35:
+		var w := k / 0.35
+		sx = lerp(1.0, 0.88, w)
+		sy = lerp(1.0, 1.08, w)
+		y_off = 2.0 * w
+	elif k < 0.55:
+		var w2 := (k - 0.35) / 0.2
+		sx = lerp(0.88, 1.14, w2)
+		sy = lerp(1.08, 0.92, w2)
+		y_off = lerp(2.0, -4.0, w2)
+	else:
+		var w3 := (k - 0.55) / 0.45
+		sx = lerp(1.14, 1.0, w3)
+		sy = lerp(0.92, 1.0, w3)
+		y_off = lerp(-4.0, 0.0, w3)
+
+	if spr and is_instance_valid(spr) and spr.texture:
+		spr.scale = anim["base_scale"] * Vector2(sx * face if face < 0 else sx, sy)
+		if face < 0:
+			spr.scale = anim["base_scale"] * Vector2(-sx, sy)
+	root.position.y = anim["base_y"] + y_off
+
+	if spirit.has("halo") and is_instance_valid(spirit["halo"]) and k < 0.55:
+		spirit["halo"].default_color.a = 0.35 + 0.4 * (1.0 - k)
+
+func _idle_particle(spirit: Dictionary) -> void:
+	if not spirit.has("fx") or not is_instance_valid(spirit["fx"]):
+		return
+	var col := DataRegistry.element_color(spirit["element"])
+	var p := ColorRect.new()
+	var sz := randf_range(3.0, 6.0)
+	p.size = Vector2(sz, sz)
+	p.color = Color(col.r, col.g, col.b, 0.55)
+	p.position = Vector2(randf_range(-18, 18), randf_range(-10, 8))
+	spirit["fx"].add_child(p)
+	var tw := create_tween()
+	tw.tween_property(p, "position", p.position + Vector2(randf_range(-8, 8), -randf_range(18, 36)), 0.55)
+	tw.parallel().tween_property(p, "modulate:a", 0.0, 0.55)
+	tw.tween_callback(p.queue_free)
+
+func _begin_attack_anim(spirit: Dictionary) -> void:
+	if spirit.has("anim"):
+		spirit["anim"]["attack_t"] = 0.0
 
 func _find_target(spirit: Dictionary):
 	var best = null
@@ -736,6 +861,7 @@ func _find_target(spirit: Dictionary):
 func _spirit_attack(spirit: Dictionary, target) -> void:
 	var cfg: Dictionary = spirit["config"]
 	var type: String = cfg["attack_type"]
+	_begin_attack_anim(spirit)
 	match type:
 		"projectile":
 			_fire_projectile(spirit, target)
@@ -744,19 +870,69 @@ func _spirit_attack(spirit: Dictionary, target) -> void:
 		"pulse":
 			_pulse_attack(spirit)
 
+func _skill_key(spirit: Dictionary) -> String:
+	return spirit["config"].get("skill", "fireball")
+
+func _skill_color(spirit: Dictionary) -> Color:
+	return spirit["config"].get("skill_color", DataRegistry.element_color(spirit["element"]))
+
 func _fire_projectile(spirit: Dictionary, target) -> void:
-	var col := DataRegistry.element_color(spirit["element"])
+	var col := _skill_color(spirit)
+	var skill: String = _skill_key(spirit)
 	var proj := {
-		"pos": spirit["pos"], "target": target, "speed": spirit["config"]["projectile_speed"],
+		"pos": spirit["pos"] + Vector2(0, -20), "target": target,
+		"speed": spirit["config"]["projectile_speed"],
 		"damage": spirit["damage"], "element": spirit["element"],
-		"status": spirit["config"].get("status", ""), "status_duration": spirit["config"].get("status_duration", 2.0) * spirit["resonance_bonus"],
-		"splash": spirit["config"].get("splash", 0.0), "color": col, "radius": 8.0, "alive": true,
+		"status": spirit["config"].get("status", ""),
+		"status_duration": spirit["config"].get("status_duration", 2.0) * spirit["resonance_bonus"],
+		"splash": spirit["config"].get("splash", 0.0), "color": col,
+		"radius": 10.0, "alive": true, "skill": skill,
 	}
-	var vis := _blob(col, 8.0, 8.0)
+	var vis := _make_skill_projectile_visual(skill, col)
 	vis.position = proj["pos"]
 	projectile_layer.add_child(vis)
 	proj["visual"] = vis
 	projectiles.append(proj)
+	_cast_flash(spirit["pos"] + Vector2(0, -24), col)
+
+func _make_skill_projectile_visual(skill: String, col: Color) -> Node2D:
+	var root := Node2D.new()
+	match skill:
+		"fireball":
+			var core := _blob(col, 12.0, 12.0)
+			root.add_child(core)
+			var outer := _blob(Color(col.r, col.g, col.b, 0.35), 20.0, 18.0)
+			root.add_child(outer)
+			var spark := _blob(Color(1, 0.9, 0.5, 0.8), 4.0, 4.0, Vector2(-4, -4))
+			root.add_child(spark)
+		"water_orb":
+			var c := _blob(col, 11.0, 11.0)
+			root.add_child(c)
+			var shine := _blob(Color(1, 1, 1, 0.45), 4.0, 3.0, Vector2(-3, -3))
+			root.add_child(shine)
+			var ring := _make_ring(Color(col.r, col.g, col.b, 0.4), 16.0, 2.0)
+			root.add_child(ring)
+		"ice_shard":
+			var shard := Polygon2D.new()
+			shard.polygon = PackedVector2Array([
+				Vector2(0, -14), Vector2(7, 0), Vector2(0, 14), Vector2(-7, 0)
+			])
+			shard.color = col
+			root.add_child(shard)
+			var core := _blob(Color(1, 1, 1, 0.7), 3.0, 5.0)
+			root.add_child(core)
+		_:
+			root.add_child(_blob(col, 10.0, 10.0))
+	return root
+
+func _cast_flash(pos: Vector2, col: Color) -> void:
+	var ring := _make_ring(col, 14.0, 3.0)
+	ring.position = pos
+	effect_layer.add_child(ring)
+	var tw := create_tween()
+	tw.tween_property(ring, "scale", Vector2(2.4, 2.4), 0.22)
+	tw.parallel().tween_property(ring, "modulate:a", 0.0, 0.22)
+	tw.tween_callback(ring.queue_free)
 
 func _beam_attack(spirit: Dictionary, target) -> void:
 	var hits := [target]
@@ -777,23 +953,79 @@ func _beam_attack(spirit: Dictionary, target) -> void:
 			break
 		hits.append(next)
 		current = next
-	var col := DataRegistry.element_color(spirit["element"])
+	var col := _skill_color(spirit)
 	for i in hits.size():
 		var e = hits[i]
 		var dmg: float = spirit["damage"] * (1.0 if i == 0 else 0.65)
 		_apply_hit(e, dmg, spirit["element"], spirit["config"].get("status", ""), spirit["config"].get("status_duration", 2.0) * spirit["resonance_bonus"])
-		var from: Vector2 = spirit["pos"] if i == 0 else hits[i - 1]["pos"]
-		_line_vfx(from, e["pos"], col)
+		var from: Vector2 = spirit["pos"] + Vector2(0, -28) if i == 0 else hits[i - 1]["pos"]
+		_thunder_bolt(from, e["pos"], col)
+
+func _thunder_bolt(a: Vector2, b: Vector2, col: Color) -> void:
+	# 折线雷电
+	var pts := PackedVector2Array()
+	var segs := 6
+	for i in segs + 1:
+		var t := float(i) / float(segs)
+		var p := a.lerp(b, t)
+		if i > 0 and i < segs:
+			var n := (b - a).normalized().orthogonal()
+			p += n * randf_range(-12.0, 12.0)
+		pts.append(p)
+	var bolt := Line2D.new()
+	bolt.points = pts
+	bolt.width = 6.0
+	bolt.default_color = col
+	bolt.joint_mode = Line2D.LINE_JOINT_ROUND
+	effect_layer.add_child(bolt)
+	var glow := Line2D.new()
+	glow.points = pts
+	glow.width = 12.0
+	glow.default_color = Color(col.r, col.g, col.b, 0.25)
+	effect_layer.add_child(glow)
+	var tw := create_tween()
+	tw.tween_property(bolt, "modulate:a", 0.0, 0.2)
+	tw.parallel().tween_property(glow, "modulate:a", 0.0, 0.18)
+	tw.tween_callback(bolt.queue_free)
+	tw.tween_callback(glow.queue_free)
+	# 落点电花
+	_burst(b, col, 8)
+	var pop := _make_ring(Color(1, 1, 1, 0.8), 10.0, 2.0)
+	pop.position = b
+	effect_layer.add_child(pop)
+	var tw2 := create_tween()
+	tw2.tween_property(pop, "scale", Vector2(2.0, 2.0), 0.15)
+	tw2.parallel().tween_property(pop, "modulate:a", 0.0, 0.15)
+	tw2.tween_callback(pop.queue_free)
 
 func _pulse_attack(spirit: Dictionary) -> void:
 	var r: float = spirit["config"].get("pulse_radius", 110.0)
-	var col := DataRegistry.element_color(spirit["element"])
-	var ring := _make_ring(col, r, 3.0)
-	ring.position = spirit["pos"]
-	effect_layer.add_child(ring)
-	var tw := create_tween()
-	tw.tween_property(ring, "modulate:a", 0.0, 0.3)
-	tw.tween_callback(ring.queue_free)
+	var col := _skill_color(spirit)
+	# 多层风环
+	for i in 3:
+		var ring := _make_ring(col, r * (0.35 + i * 0.25), 3.0 + i)
+		ring.position = spirit["pos"] + Vector2(0, -10)
+		ring.default_color.a = 0.55 - i * 0.12
+		effect_layer.add_child(ring)
+		var tw := create_tween()
+		tw.tween_interval(0.04 * i)
+		tw.tween_property(ring, "scale", Vector2(1.25, 1.25), 0.32)
+		tw.parallel().tween_property(ring, "modulate:a", 0.0, 0.32)
+		tw.tween_callback(ring.queue_free)
+	# 飘叶
+	for i in 8:
+		var leaf := Polygon2D.new()
+		leaf.polygon = PackedVector2Array([Vector2(0, -5), Vector2(4, 0), Vector2(0, 5), Vector2(-3, 0)])
+		leaf.color = Color(col.r, col.g, col.b, 0.7)
+		leaf.position = spirit["pos"] + Vector2(randf_range(-10, 10), randf_range(-8, 8))
+		effect_layer.add_child(leaf)
+		var ang := TAU * i / 8.0 + randf_range(-0.2, 0.2)
+		var twl := create_tween()
+		twl.tween_property(leaf, "position", leaf.position + Vector2(cos(ang), sin(ang) * 0.6) * r, 0.4)
+		twl.parallel().tween_property(leaf, "rotation", randf_range(-2.0, 2.0), 0.4)
+		twl.parallel().tween_property(leaf, "modulate:a", 0.0, 0.4)
+		twl.tween_callback(leaf.queue_free)
+
 	for e in enemies:
 		if not e["alive"] or e["reached"]:
 			continue
@@ -821,6 +1053,7 @@ func _update_projectiles(dt: float) -> void:
 		var step: float = p["speed"] * dt
 		if d <= step + t["radius"]:
 			_apply_hit(t, p["damage"], p["element"], p["status"], p["status_duration"])
+			_skill_hit_vfx(p.get("skill", ""), t["pos"], p["color"], p["element"])
 			if p["splash"] > 0.0:
 				for e in enemies:
 					if e == t or not e["alive"]:
@@ -835,7 +1068,58 @@ func _update_projectiles(dt: float) -> void:
 			p["pos"] += to.normalized() * step
 			if p.has("visual") and is_instance_valid(p["visual"]):
 				p["visual"].position = p["pos"]
+				p["visual"].rotation += dt * 6.0
+				# 弹道尾焰
+				if p.get("skill", "") == "fireball" and randf() < 0.55:
+					var tr := ColorRect.new()
+					tr.size = Vector2(5, 5)
+					tr.color = Color(p["color"].r, p["color"].g, p["color"].b, 0.5)
+					tr.position = p["pos"] + Vector2(randf_range(-3, 3), randf_range(-3, 3))
+					effect_layer.add_child(tr)
+					var tw := create_tween()
+					tw.tween_property(tr, "modulate:a", 0.0, 0.25)
+					tw.tween_callback(tr.queue_free)
 	projectiles = projectiles.filter(func(p): return p["alive"])
+
+func _skill_hit_vfx(skill: String, pos: Vector2, col: Color, element: int) -> void:
+	match skill:
+		"fireball":
+			_burst(pos, col, 14)
+			_burst(pos, Color(1, 0.85, 0.4), 6)
+			var r := _make_ring(Color(1, 0.6, 0.3, 0.7), 18.0, 3.0)
+			r.position = pos
+			effect_layer.add_child(r)
+			var tw := create_tween()
+			tw.tween_property(r, "scale", Vector2(2.8, 2.8), 0.28)
+			tw.parallel().tween_property(r, "modulate:a", 0.0, 0.28)
+			tw.tween_callback(r.queue_free)
+		"water_orb":
+			_burst(pos, col, 12)
+			for i in 5:
+				var drop := _blob(Color(0.6, 0.9, 1, 0.8), 3.0, 4.0)
+				drop.position = pos
+				effect_layer.add_child(drop)
+				var twd := create_tween()
+				var a := randf_range(-PI, 0.0)
+				twd.tween_property(drop, "position", pos + Vector2(cos(a), sin(a)) * randf_range(20, 40), 0.3)
+				twd.parallel().tween_property(drop, "modulate:a", 0.0, 0.3)
+				twd.tween_callback(drop.queue_free)
+		"ice_shard":
+			_burst(pos, col, 10)
+			for i in 6:
+				var sp := Polygon2D.new()
+				sp.polygon = PackedVector2Array([Vector2(0, -6), Vector2(3, 0), Vector2(0, 6), Vector2(-3, 0)])
+				sp.color = col
+				sp.position = pos
+				effect_layer.add_child(sp)
+				var tws := create_tween()
+				var ang := TAU * i / 6.0
+				tws.tween_property(sp, "position", pos + Vector2(cos(ang), sin(ang)) * 28.0, 0.28)
+				tws.parallel().tween_property(sp, "modulate:a", 0.0, 0.28)
+				tws.tween_callback(sp.queue_free)
+		_:
+			_burst(pos, col, 8)
+			_cast_flash(pos, col)
 
 func _leave_env_on_hit(pos: Vector2, element: int) -> void:
 	if element == DataRegistry.Element.WATER:
