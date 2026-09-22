@@ -6,6 +6,13 @@ Thumbs.db
 .vscode/
 .cursor/
 
+# Godot cache / editor state
+godot/.godot/
+*.translation
+
+# Workspace-root AI image drafts (canonical copies live in godot/assets/)
+/generated-*.png
+
 # Node
 node_modules/
 npm-debug.log*
