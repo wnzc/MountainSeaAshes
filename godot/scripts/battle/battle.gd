@@ -1269,7 +1269,8 @@ func _advance_chain(ctx: Dictionary, reaction: Dictionary) -> void:
 		slowmo_until = Time.get_ticks_msec() / 1000.0 + 0.5
 		for e in enemies:
 			if e["alive"]:
-				_apply_hit(e, 45.0, reaction.get("output", ""), "", 0.0)
+				# 山海异象：范围清场，元素色跟随反应
+				_apply_hit(e, 45.0, DataRegistry.Element.FIRE, "BURN", 1.0)
 
 func _show_chain(text: String) -> void:
 	chain_banner.text = text
