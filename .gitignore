@@ -20,6 +20,7 @@ npm-debug.log*
 # Playwright CLI session cache & QA screenshots
 .playwright-cli/
 output/
+godot/output/
 
 # Env / secrets
 .env

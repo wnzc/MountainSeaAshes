@@ -182,31 +182,24 @@ func _setup_slots() -> void:
 		body.input_event.connect(_on_slot_input.bind(s["id"]))
 		slot_layer.add_child(body)
 
-		var ring := _make_ring(Color(1, 1, 1, 0.15), 44.0, 2.0)
-		ring.position = s["pos"] + Vector2(0, 10)
+		# 仅选中/可放置时的光圈，默认隐藏
+		var ring := _make_ring(Color(1.0, 0.85, 0.4, 0.0), 48.0, 2.0)
+		ring.position = s["pos"] + Vector2(0, 8)
 		ring.set_meta("slot_visual", s["id"])
 		slot_layer.add_child(ring)
 
-		# 灵兽底座（放置位）
+		# 灵兽底座
 		var base_spr := Sprite2D.new()
 		var btex: Texture2D = load("res://assets/ui/tower_base.png")
 		if btex:
 			base_spr.texture = btex
-			var bs := 96.0 / maxf(btex.get_width(), 1.0)
+			var bs := 100.0 / maxf(btex.get_width(), 1.0)
 			base_spr.scale = Vector2(bs, bs)
 			base_spr.offset = Vector2(0, -btex.get_height() * bs * 0.15)
 		base_spr.position = s["pos"] + Vector2(0, 8)
-		base_spr.modulate = Color(1, 1, 1, 0.92)
+		base_spr.modulate = Color(1, 1, 1, 0.88)
 		base_spr.set_meta("slot_base", s["id"])
 		slot_layer.add_child(base_spr)
-
-		var label := Label.new()
-		label.text = s["id"]
-		label.position = s["pos"] + Vector2(-14, 36)
-		label.add_theme_font_size_override("font_size", 18)
-		label.modulate = Color(1, 1, 1, 0.4)
-		label.set_meta("slot_label", s["id"])
-		slot_layer.add_child(label)
 
 func _setup_water() -> void:
 	for w in DataRegistry.MAP["water_zones"]:
@@ -231,6 +224,44 @@ func _make_ring(color: Color, radius: float, width: float) -> Line2D:
 	return ring
 
 func _setup_ui() -> void:
+	# 统一简洁主题：去掉默认紫框/焦点框
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.1, 0.09, 0.78)
+	style.set_corner_radius_all(14)
+	style.set_border_width_all(1)
+	style.border_color = Color(1, 1, 1, 0.08)
+	style.content_margin_left = 14
+	style.content_margin_right = 14
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+
+	var btn_style := StyleBoxFlat.new()
+	btn_style.bg_color = Color(0.12, 0.14, 0.12, 0.85)
+	btn_style.set_corner_radius_all(12)
+	btn_style.set_border_width_all(0)
+	btn_style.content_margin_left = 8
+	btn_style.content_margin_right = 8
+	btn_style.content_margin_top = 6
+	btn_style.content_margin_bottom = 6
+
+	var btn_hover := btn_style.duplicate()
+	btn_hover.bg_color = Color(0.2, 0.22, 0.18, 0.9)
+
+	var btn_focus := btn_style.duplicate()
+	btn_focus.bg_color = Color(0.2, 0.22, 0.18, 0.9)
+	btn_focus.border_color = Color(0.83, 0.66, 0.29, 0.35)
+	btn_focus.set_border_width_all(1)
+
+	for node in [$UI/TopHUD, $UI/SlotPanel, $UI/PausePanel, $UI/ResultPanel]:
+		if node is PanelContainer:
+			node.add_theme_stylebox_override("panel", style)
+		if node is CanvasItem:
+			node.add_theme_stylebox_override("panel", style)
+
+	$UI/SlotPanel.add_theme_stylebox_override("panel", style)
+	$UI/PausePanel.add_theme_stylebox_override("panel", style)
+	$UI/ResultPanel.add_theme_stylebox_override("panel", style)
+
 	btn_pause.pressed.connect(func(): get_tree().paused = true; pause_panel.visible = true)
 	btn_speed.pressed.connect(func():
 		battle_speed = 2.0 if battle_speed == 1.0 else 1.0
@@ -260,16 +291,67 @@ func _setup_ui() -> void:
 	toast_label.visible = false
 	boss_bar.visible = false
 
+	# Boss 血条去掉默认紫填充
+	var bar_bg := StyleBoxFlat.new()
+	bar_bg.bg_color = Color(0, 0, 0, 0.45)
+	bar_bg.set_corner_radius_all(6)
+	var bar_fill := StyleBoxFlat.new()
+	bar_fill.bg_color = Color(0.78, 0.28, 0.2)
+	bar_fill.set_corner_radius_all(6)
+	boss_bar.add_theme_stylebox_override("background", bar_bg)
+	boss_bar.add_theme_stylebox_override("fill", bar_fill)
+
+	_style_button(btn_pause, btn_style, btn_hover, btn_focus)
+	_style_button(btn_speed, btn_style, btn_hover, btn_focus)
+
+	# 底部灵兽卡：立绘按钮
 	for id in DataRegistry.SPIRIT_ORDER:
 		var cfg: Dictionary = DataRegistry.SPIRITS[id]
-		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(96, 120)
-		btn.text = "%s\n%s\n%d" % [DataRegistry.element_name(cfg["element"]), cfg["name"], cfg["cost"]]
-		btn.set_meta("spirit_id", id)
-		btn.pressed.connect(_on_card_pressed.bind(id))
-		card_bar.add_child(btn)
+		var card := Button.new()
+		card.custom_minimum_size = Vector2(108, 140)
+		card.clip_text = false
+		card.focus_mode = Control.FOCUS_NONE
+		_style_button(card, btn_style, btn_hover, btn_focus)
+		var box := VBoxContainer.new()
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.set_anchors_preset(Control.PRESET_FULL_RECT)
+		card.add_child(box)
+
+		var icon := TextureRect.new()
+		icon.texture = load(cfg["sprite"]) if ResourceLoader.exists(cfg["sprite"]) else null
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.custom_minimum_size = Vector2(88, 88)
+		icon.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(icon)
+
+		var caption := Label.new()
+		caption.text = "%s  %d" % [cfg["name"], cfg["cost"]]
+		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		caption.add_theme_font_size_override("font_size", 18)
+		caption.add_theme_color_override("font_color", Color(0.95, 0.92, 0.82))
+		caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(caption)
+
+		card.set_meta("spirit_id", id)
+		card.set_meta("caption", caption)
+		card.pressed.connect(_on_card_pressed.bind(id))
+		card_bar.add_child(card)
 
 	_update_hud()
+
+func _style_button(btn: Button, normal: StyleBoxFlat, hover: StyleBoxFlat, focus: StyleBoxFlat) -> void:
+	btn.flat = false
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.add_theme_stylebox_override("normal", normal)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("pressed", hover)
+	btn.add_theme_stylebox_override("focus", focus)
+	btn.add_theme_stylebox_override("disabled", normal)
+	btn.add_theme_color_override("font_color", Color(0.93, 0.9, 0.82))
+	btn.add_theme_color_override("font_hover_color", Color(1, 0.95, 0.8))
+	btn.add_theme_color_override("font_pressed_color", Color(1, 0.95, 0.8))
 
 func _connect_events() -> void:
 	EventBus.gold_changed.connect(func(v): gold = v; _update_hud())
@@ -283,9 +365,15 @@ func _update_hud() -> void:
 	hud_hp.text = "❤ %d" % base_hp
 	hud_gold.text = "◉ %d" % gold
 	for btn in card_bar.get_children():
+		if not btn.has_meta("spirit_id"):
+			continue
 		var id: String = btn.get_meta("spirit_id")
 		var cost: int = DataRegistry.SPIRITS[id]["cost"]
-		btn.disabled = gold < cost
+		var can: bool = gold >= cost
+		btn.disabled = not can
+		btn.modulate = Color(1, 1, 1, 1.0 if can else 0.42)
+		if selected_card == id:
+			btn.modulate = Color(1.05, 0.98, 0.75, 1.0)
 
 # ─── 输入 ────────────────────────────────────────────────
 func _on_card_pressed(spirit_id: String) -> void:
@@ -296,6 +384,7 @@ func _on_card_pressed(spirit_id: String) -> void:
 		selected_slot = ""
 		slot_panel.visible = false
 	EventBus.card_selected.emit(selected_card)
+	_update_hud()
 	_refresh_slot_visuals()
 
 func _on_slot_input(_vp, event: InputEvent, _shape, slot_id: String) -> void:
@@ -484,27 +573,41 @@ func _draw_resonance() -> void:
 			slot_layer.add_child(line)
 
 func _refresh_slot_visuals() -> void:
+	# 清掉旧范围预览
+	for c in slot_layer.get_children():
+		if c.has_meta("range_preview"):
+			c.queue_free()
 	for c in slot_layer.get_children():
 		if c is Line2D and c.has_meta("slot_visual"):
 			var sid: String = c.get_meta("slot_visual")
 			var slot: Dictionary = slots[sid]
 			if slot["spirit"]:
-				c.default_color = Color(1, 1, 1, 0.05)
+				c.default_color.a = 0.0
 			elif selected_card != "" and gold >= DataRegistry.SPIRITS[selected_card]["cost"]:
-				c.default_color = Color(1.0, 0.82, 0.35, 0.7)
+				c.default_color = Color(1.0, 0.85, 0.4, 0.55)
 			elif selected_slot == sid:
-				c.default_color = Color(1.0, 0.82, 0.35, 0.9)
+				c.default_color = Color(1.0, 0.85, 0.4, 0.75)
 			else:
-				c.default_color = Color(1, 1, 1, 0.12)
+				c.default_color.a = 0.0
 		if c is Sprite2D and c.has_meta("slot_base"):
 			var sid2: String = c.get_meta("slot_base")
 			var slot2: Dictionary = slots[sid2]
 			if slot2["spirit"]:
-				c.modulate = Color(1, 1, 1, 0.75)
+				c.modulate = Color(1, 1, 1, 0.55)
 			elif selected_card != "" and gold >= DataRegistry.SPIRITS[selected_card]["cost"]:
-				c.modulate = Color(1.0, 0.95, 0.75, 1.0)
+				c.modulate = Color(1.0, 0.96, 0.8, 1.0)
 			else:
-				c.modulate = Color(1, 1, 1, 0.92)
+				c.modulate = Color(1, 1, 1, 0.82)
+	# 仅选中已放置灵兽时显示很淡的范围
+	if selected_slot != "" and slots.has(selected_slot):
+		var slot3: Dictionary = slots[selected_slot]
+		if slot3["spirit"]:
+			var rcol := DataRegistry.element_color(slot3["spirit"]["element"])
+			rcol.a = 0.14
+			var rr := _make_ring(rcol, slot3["spirit"]["range"], 1.5)
+			rr.position = slot3["pos"]
+			rr.set_meta("range_preview", true)
+			slot_layer.add_child(rr)
 
 # ─── 视觉 ────────────────────────────────────────────────
 func _spawn_spirit_visual(spirit: Dictionary) -> void:
@@ -512,14 +615,9 @@ func _spawn_spirit_visual(spirit: Dictionary) -> void:
 	root.position = spirit["pos"] + Vector2(0, -6)
 
 	var col := DataRegistry.element_color(spirit["element"])
-	var glow := _blob(col, 40.0, 12.0, Vector2(0, 28))
-	glow.color.a = 0.28
+	var glow := _blob(Color(col.r, col.g, col.b, 0.18), 34.0, 10.0, Vector2(0, 28))
 	root.add_child(glow)
-
-	var halo := _make_ring(col, 36.0, 2.5)
-	halo.position = Vector2(0, 26)
-	halo.default_color.a = 0.35
-	root.add_child(halo)
+	# 不再画粗色环，避免像紫框
 
 	var spr := Sprite2D.new()
 	var path: String = spirit["config"].get("sprite", "")
@@ -544,7 +642,6 @@ func _spawn_spirit_visual(spirit: Dictionary) -> void:
 	spirit["visual"] = root
 	spirit["sprite"] = spr
 	spirit["glow"] = glow
-	spirit["halo"] = halo
 	spirit["fx"] = fx
 	spirit["anim"] = {
 		"t": randf() * TAU,
@@ -568,24 +665,34 @@ func _blob(color: Color, rx: float, ry: float, offset: Vector2 = Vector2.ZERO) -
 	return p
 
 func _spawn_zone_visual(zone: Dictionary) -> void:
-	var rect := ColorRect.new()
-	rect.size = zone["size"]
-	rect.position = zone["pos"] - zone["size"] * 0.5
+	var root := Node2D.new()
+	root.position = zone["pos"]
 	match zone["type"]:
 		"NATURAL_WATER", "PUDDLE":
-			rect.color = Color(0.23, 0.65, 0.77, 0.28)
+			# 椭圆水迹，避免方框
+			var e1 := _blob(Color(0.28, 0.62, 0.7, 0.22), zone["size"].x * 0.55, zone["size"].y * 0.42)
+			var e2 := _blob(Color(0.4, 0.75, 0.8, 0.16), zone["size"].x * 0.35, zone["size"].y * 0.28, Vector2(8, 4))
+			root.add_child(e1)
+			root.add_child(e2)
 		"ICE":
-			rect.color = Color(0.66, 0.83, 0.91, 0.4)
+			var ie := _blob(Color(0.7, 0.85, 0.92, 0.28), zone["size"].x * 0.5, zone["size"].y * 0.4)
+			root.add_child(ie)
 		"FIRE_FIELD":
-			rect.color = Color(0.91, 0.36, 0.23, 0.3)
+			for i in 4:
+				var f := _blob(Color(0.95, 0.45, 0.2, 0.22), 18, 12, Vector2(randf_range(-20, 20), randf_range(-8, 8)))
+				root.add_child(f)
 		"STEAM":
-			rect.color = Color(0.82, 0.9, 0.88, 0.35)
+			for i in 3:
+				var s := _blob(Color(0.88, 0.92, 0.9, 0.18), 28, 18, Vector2(randf_range(-16, 16), randf_range(-10, 10)))
+				root.add_child(s)
 		"STORM":
-			rect.color = Color(0.48, 0.36, 1.0, 0.28)
+			for i in 5:
+				var b := _blob(Color(0.6, 0.5, 1.0, 0.16), 14, 10, Vector2(randf_range(-24, 24), randf_range(-12, 12)))
+				root.add_child(b)
 		_:
-			rect.color = Color(1, 1, 1, 0.15)
-	zone["visual"] = rect
-	env_layer.add_child(rect)
+			root.add_child(_blob(Color(1, 1, 1, 0.1), 24, 14))
+	zone["visual"] = root
+	env_layer.add_child(root)
 
 func _spawn_enemy_visual(enemy: Dictionary) -> void:
 	var root := Node2D.new()
@@ -616,15 +723,16 @@ func _spawn_enemy_visual(enemy: Dictionary) -> void:
 		var eye2 := _blob(enemy["config"]["accent"], 4.0, 4.0, Vector2(7, -2))
 		root.add_child(eye2)
 
-	# 状态染色环（元素表现）
-	var status := _make_ring(Color(1, 1, 1, 0.0), enemy["radius"] + 6.0, 3.0)
-	status.set_meta("status_ring", true)
-	root.add_child(status)
-
+	# 不再绘制粗色环（曾显示为紫色框）；状态用精灵染色
 	enemy_layer.add_child(root)
 	enemy["visual"] = root
 	enemy["sprite"] = spr
-	enemy["status_ring"] = status
+	enemy["anim"] = {
+		"t": randf() * TAU,
+		"base_y": root.position.y,
+		"base_scale": spr.scale if spr.texture else Vector2.ONE,
+		"hit_flash": 0.0,
+	}
 
 func _burst(pos: Vector2, color: Color, n: int) -> void:
 	for i in n:
@@ -645,14 +753,20 @@ func _reaction_vfx(pos: Vector2, name: String, color: Color) -> void:
 	label.position = pos + Vector2(-30, -50)
 	label.add_theme_font_size_override("font_size", 28)
 	label.modulate = color
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.4))
+	label.add_theme_constant_override("outline_size", 5)
 	effect_layer.add_child(label)
-	var ring := _make_ring(color, 40.0, 3.0)
-	ring.position = pos
-	effect_layer.add_child(ring)
-	var tw := create_tween()
-	tw.tween_property(ring, "scale", Vector2(2.2, 2.2), 0.4)
-	tw.parallel().tween_property(ring, "modulate:a", 0.0, 0.4)
-	tw.tween_callback(ring.queue_free)
+	for i in 8:
+		var p := ColorRect.new()
+		p.size = Vector2(5, 5)
+		p.color = color
+		p.position = pos
+		effect_layer.add_child(p)
+		var twp := create_tween()
+		var ang := TAU * i / 8.0
+		twp.tween_property(p, "position", pos + Vector2(cos(ang), sin(ang)) * 42.0, 0.35)
+		twp.parallel().tween_property(p, "modulate:a", 0.0, 0.35)
+		twp.tween_callback(p.queue_free)
 	var tw2 := create_tween()
 	tw2.tween_property(label, "position:y", label.position.y - 30.0, 0.5)
 	tw2.parallel().tween_property(label, "modulate:a", 0.0, 0.5)
@@ -775,9 +889,7 @@ func _update_spirit_anim(spirit: Dictionary, dt: float, target) -> void:
 		if spirit.has("sprite") and is_instance_valid(spirit["sprite"]) and spirit["sprite"].texture:
 			spirit["sprite"].scale = anim["base_scale"] * breathe
 		if spirit.has("glow") and is_instance_valid(spirit["glow"]):
-			spirit["glow"].color.a = 0.22 + 0.08 * (0.5 + 0.5 * sin(anim["t"] * 2.0))
-		if spirit.has("halo") and is_instance_valid(spirit["halo"]):
-			spirit["halo"].rotation = anim["t"] * 0.4
+			spirit["glow"].color.a = 0.12 + 0.06 * (0.5 + 0.5 * sin(anim["t"] * 2.0))
 
 	anim["idle_particle_cd"] -= dt
 	if anim["idle_particle_cd"] <= 0.0:
@@ -817,9 +929,6 @@ func _play_attack_pose(spirit: Dictionary, anim: Dictionary, k: float, target) -
 		if face < 0:
 			spr.scale = anim["base_scale"] * Vector2(-sx, sy)
 	root.position.y = anim["base_y"] + y_off
-
-	if spirit.has("halo") and is_instance_valid(spirit["halo"]) and k < 0.55:
-		spirit["halo"].default_color.a = 0.35 + 0.4 * (1.0 - k)
 
 func _idle_particle(spirit: Dictionary) -> void:
 	if not spirit.has("fx") or not is_instance_valid(spirit["fx"]):
@@ -910,8 +1019,6 @@ func _make_skill_projectile_visual(skill: String, col: Color) -> Node2D:
 			root.add_child(c)
 			var shine := _blob(Color(1, 1, 1, 0.45), 4.0, 3.0, Vector2(-3, -3))
 			root.add_child(shine)
-			var ring := _make_ring(Color(col.r, col.g, col.b, 0.4), 16.0, 2.0)
-			root.add_child(ring)
 		"ice_shard":
 			var shard := Polygon2D.new()
 			shard.polygon = PackedVector2Array([
@@ -926,13 +1033,18 @@ func _make_skill_projectile_visual(skill: String, col: Color) -> Node2D:
 	return root
 
 func _cast_flash(pos: Vector2, col: Color) -> void:
-	var ring := _make_ring(col, 14.0, 3.0)
-	ring.position = pos
-	effect_layer.add_child(ring)
-	var tw := create_tween()
-	tw.tween_property(ring, "scale", Vector2(2.4, 2.4), 0.22)
-	tw.parallel().tween_property(ring, "modulate:a", 0.0, 0.22)
-	tw.tween_callback(ring.queue_free)
+	# 小爆闪，不画整圈框
+	for i in 5:
+		var p := ColorRect.new()
+		p.size = Vector2(4, 4)
+		p.color = Color(col.r, col.g, col.b, 0.7)
+		p.position = pos
+		effect_layer.add_child(p)
+		var tw := create_tween()
+		var ang := TAU * i / 5.0
+		tw.tween_property(p, "position", pos + Vector2(cos(ang), sin(ang)) * 22.0, 0.16)
+		tw.parallel().tween_property(p, "modulate:a", 0.0, 0.16)
+		tw.tween_callback(p.queue_free)
 
 func _beam_attack(spirit: Dictionary, target) -> void:
 	var hits := [target]
@@ -990,7 +1102,7 @@ func _thunder_bolt(a: Vector2, b: Vector2, col: Color) -> void:
 	tw.tween_callback(glow.queue_free)
 	# 落点电花
 	_burst(b, col, 8)
-	var pop := _make_ring(Color(1, 1, 1, 0.8), 10.0, 2.0)
+	var pop := _blob(Color(1, 1, 1, 0.5), 8.0, 8.0)
 	pop.position = b
 	effect_layer.add_child(pop)
 	var tw2 := create_tween()
@@ -1001,30 +1113,19 @@ func _thunder_bolt(a: Vector2, b: Vector2, col: Color) -> void:
 func _pulse_attack(spirit: Dictionary) -> void:
 	var r: float = spirit["config"].get("pulse_radius", 110.0)
 	var col := _skill_color(spirit)
-	# 多层风环
-	for i in 3:
-		var ring := _make_ring(col, r * (0.35 + i * 0.25), 3.0 + i)
-		ring.position = spirit["pos"] + Vector2(0, -10)
-		ring.default_color.a = 0.55 - i * 0.12
-		effect_layer.add_child(ring)
-		var tw := create_tween()
-		tw.tween_interval(0.04 * i)
-		tw.tween_property(ring, "scale", Vector2(1.25, 1.25), 0.32)
-		tw.parallel().tween_property(ring, "modulate:a", 0.0, 0.32)
-		tw.tween_callback(ring.queue_free)
-	# 飘叶
-	for i in 8:
+	# 风刃碎片 + 淡弧，不套整圈
+	for i in 6:
 		var leaf := Polygon2D.new()
-		leaf.polygon = PackedVector2Array([Vector2(0, -5), Vector2(4, 0), Vector2(0, 5), Vector2(-3, 0)])
-		leaf.color = Color(col.r, col.g, col.b, 0.7)
-		leaf.position = spirit["pos"] + Vector2(randf_range(-10, 10), randf_range(-8, 8))
+		leaf.polygon = PackedVector2Array([Vector2(0, -6), Vector2(5, 0), Vector2(0, 6), Vector2(-4, 0)])
+		leaf.color = Color(col.r, col.g, col.b, 0.55)
+		leaf.position = spirit["pos"] + Vector2(randf_range(-8, 8), randf_range(-6, 6))
 		effect_layer.add_child(leaf)
-		var ang := TAU * i / 8.0 + randf_range(-0.2, 0.2)
-		var twl := create_tween()
-		twl.tween_property(leaf, "position", leaf.position + Vector2(cos(ang), sin(ang) * 0.6) * r, 0.4)
-		twl.parallel().tween_property(leaf, "rotation", randf_range(-2.0, 2.0), 0.4)
-		twl.parallel().tween_property(leaf, "modulate:a", 0.0, 0.4)
-		twl.tween_callback(leaf.queue_free)
+		var ang := TAU * i / 6.0 + randf_range(-0.15, 0.15)
+		var tw := create_tween()
+		tw.tween_property(leaf, "position", leaf.position + Vector2(cos(ang), sin(ang) * 0.7) * r * 0.85, 0.28)
+		tw.parallel().tween_property(leaf, "rotation", randf_range(-2.0, 2.0), 0.28)
+		tw.parallel().tween_property(leaf, "modulate:a", 0.0, 0.28)
+		tw.tween_callback(leaf.queue_free)
 
 	for e in enemies:
 		if not e["alive"] or e["reached"]:
@@ -1086,13 +1187,6 @@ func _skill_hit_vfx(skill: String, pos: Vector2, col: Color, element: int) -> vo
 		"fireball":
 			_burst(pos, col, 14)
 			_burst(pos, Color(1, 0.85, 0.4), 6)
-			var r := _make_ring(Color(1, 0.6, 0.3, 0.7), 18.0, 3.0)
-			r.position = pos
-			effect_layer.add_child(r)
-			var tw := create_tween()
-			tw.tween_property(r, "scale", Vector2(2.8, 2.8), 0.28)
-			tw.parallel().tween_property(r, "modulate:a", 0.0, 0.28)
-			tw.tween_callback(r.queue_free)
 		"water_orb":
 			_burst(pos, col, 12)
 			for i in 5:
@@ -1150,6 +1244,8 @@ func _damage(enemy, amount: float) -> bool:
 	if enemy["config"]["tag"] == "tank" and not enemy["shell_broken"]:
 		dmg *= 0.65
 	enemy["hp"] -= dmg
+	if enemy.has("anim"):
+		enemy["anim"]["hit_flash"] = 1.0
 	if enemy["hp"] <= 0.0:
 		enemy["hp"] = 0.0
 		enemy["alive"] = false
@@ -1285,6 +1381,10 @@ func _show_toast(msg: String) -> void:
 	toast_label.text = msg
 	toast_label.visible = true
 	toast_label.modulate.a = 1.0
+	# 弱化底框：只保留轻描边
+	toast_label.add_theme_color_override("font_color", Color(0.95, 0.92, 0.82, 0.9))
+	toast_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.35))
+	toast_label.add_theme_constant_override("outline_size", 4)
 	var tw := create_tween()
 	tw.tween_interval(2.0)
 	tw.tween_property(toast_label, "modulate:a", 0.0, 0.3)
@@ -1375,6 +1475,10 @@ func _update_enemies(dt: float) -> void:
 			e["element"] = -1
 		if e["config"]["tag"] == "tank" and not e["shell_broken"] and e["hp"] < e["max_hp"] * 0.5:
 			e["shell_broken"] = true
+		if e["config"].get("crack", false) and not e["shell_broken"] and e["hp"] < e["max_hp"] * 0.45:
+			e["shell_broken"] = true
+			e["speed"] *= 1.45
+			_reaction_vfx(e["pos"], "破甲", Color("d0d0d0"))
 		if e["progress"] >= 1.0:
 			_reach_base(e)
 			continue
@@ -1387,27 +1491,53 @@ func _update_enemies(dt: float) -> void:
 			speed *= 1.25
 		e["progress"] = clampf(e["progress"] + (speed * dt) / path_len, 0.0, 1.0)
 		e["pos"] = _point_on_path(e["progress"])
-		if e.has("visual") and is_instance_valid(e["visual"]):
-			e["visual"].position = e["pos"]
+		_animate_enemy(e, dt)
 		_update_status_tint(e)
 		if e["is_boss"]:
 			_update_boss(e, dt)
 	enemies = enemies.filter(func(e): return e["alive"])
 
-func _update_status_tint(e) -> void:
-	if not e.has("status_ring") or not is_instance_valid(e["status_ring"]):
+func _animate_enemy(e, dt: float) -> void:
+	if not e.has("anim") or not e.has("visual") or not is_instance_valid(e["visual"]):
 		return
-	var ring: Line2D = e["status_ring"]
+	var anim: Dictionary = e["anim"]
+	anim["t"] += dt
+	anim["hit_flash"] = maxf(0.0, anim.get("hit_flash", 0.0) - dt * 4.0)
+	var root: Node2D = e["visual"]
+	var bob := sin(anim["t"] * 5.0 + e["id"] * 0.3) * 2.5
+	root.position = e["pos"] + Vector2(0, bob)
+	# 被击顿帧缩放
+	var flash: float = anim["hit_flash"]
+	if e.has("sprite") and is_instance_valid(e["sprite"]) and e["sprite"].texture:
+		var sc: Vector2 = anim["base_scale"]
+		if flash > 0.0:
+			sc = sc * (1.0 + flash * 0.12)
+		e["sprite"].scale = sc
+	# 裂壳兽破甲后提速微缩
+	if e["config"].get("crack", false) and e.get("shell_broken", false) and e.has("sprite"):
+		e["sprite"].rotation = sin(anim["t"] * 8.0) * 0.06
+
+func _update_status_tint(e) -> void:
+	if not e.has("sprite") or not is_instance_valid(e["sprite"]):
+		return
+	var spr: Sprite2D = e["sprite"]
 	var now := Time.get_ticks_msec() / 1000.0
+	# 用轻微染色代替粗色环，避免紫色描边框
 	if now < e["frozen_until"]:
-		ring.default_color = Color(0.66, 0.83, 0.91, 0.85)
+		spr.modulate = Color(0.75, 0.9, 1.0, 0.85)
 	elif e["element"] >= 0:
-		ring.default_color = DataRegistry.element_color(e["element"])
-		ring.default_color.a = 0.55
+		var c: Color = DataRegistry.element_color(e["element"])
+		spr.modulate = Color(1, 1, 1, 1).lerp(c, 0.22)
 	elif now < e["burn_until"]:
-		ring.default_color = Color(0.91, 0.36, 0.23, 0.45)
+		spr.modulate = Color(1.0, 0.75, 0.55, 1.0)
 	else:
-		ring.default_color = Color(1, 1, 1, 0.0)
+		spr.modulate = Color(1, 1, 1, 1)
+	# 雾影隐去
+	if e["config"].get("stealth", false):
+		var period: float = e["config"].get("stealth_period", 3.5)
+		var ph := fmod(now + e["id"] * 0.1, period)
+		if ph > period * 0.55 and e["element"] < 0:
+			spr.modulate.a = 0.22
 
 func _reach_base(e) -> void:
 	e["reached"] = true

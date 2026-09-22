@@ -104,6 +104,26 @@ const ENEMIES := {
 		"charge_interval": 8.0, "summon_interval": 12.0,
 		"sprite": "res://assets/enemies/enemy_ink_tiger.png",
 	},
+	"enemy.mist_shade": {
+		"id": "enemy.mist_shade", "name": "雾影", "max_hp": 70.0, "speed": 75.0,
+		"reward": 12, "radius": 26.0, "tag": "special", "color": Color("222222"),
+		"accent": Color("e8e8e8"), "is_boss": false,
+		"sprite": "res://assets/enemies/enemy_mist_shade.png",
+		"stealth": true, "stealth_period": 3.5,
+	},
+	"enemy.crack_shell": {
+		"id": "enemy.crack_shell", "name": "裂壳兽", "max_hp": 140.0, "speed": 60.0,
+		"reward": 14, "radius": 30.0, "tag": "special", "color": Color("111111"),
+		"accent": Color("9a9a9a"), "is_boss": false,
+		"sprite": "res://assets/enemies/enemy_crack_shell.png",
+		"crack": true,
+	},
+	"enemy.spirit_giant": {
+		"id": "enemy.spirit_giant", "name": "噬灵魁", "max_hp": 480.0, "speed": 42.0,
+		"reward": 40, "radius": 42.0, "tag": "elite", "color": Color("0d0d0d"),
+		"accent": Color("cfcfcf"), "is_boss": false,
+		"sprite": "res://assets/enemies/enemy_spirit_giant.png",
+	},
 }
 
 ## 双元素反应（无序组合 key = "A+B" 字母序）
@@ -198,11 +218,16 @@ const WAVES := [
 		{"enemy_id": "enemy.ink_hound", "count": 6, "interval": 0.55, "delay": 2.0},
 		{"enemy_id": "enemy.ink_shell", "count": 3, "interval": 1.8, "delay": 5.0},
 		{"enemy_id": "enemy.ink_worm", "count": 8, "interval": 0.3, "delay": 8.0},
+		{"enemy_id": "enemy.mist_shade", "count": 2, "interval": 2.5, "delay": 4.0},
+		{"enemy_id": "enemy.crack_shell", "count": 2, "interval": 3.0, "delay": 7.0},
 	],
 	[
 		{"enemy_id": "enemy.ink_worm", "count": 16, "interval": 0.28, "delay": 0.0},
 		{"enemy_id": "enemy.ink_hound", "count": 8, "interval": 0.5, "delay": 2.5},
 		{"enemy_id": "enemy.ink_shell", "count": 2, "interval": 2.2, "delay": 7.0},
+		{"enemy_id": "enemy.mist_shade", "count": 3, "interval": 1.8, "delay": 3.0},
+		{"enemy_id": "enemy.spirit_giant", "count": 1, "interval": 1.0, "delay": 10.0},
+		{"enemy_id": "enemy.crack_shell", "count": 2, "interval": 2.5, "delay": 8.0},
 	],
 	[
 		{"enemy_id": "enemy.ink_tiger", "count": 1, "interval": 1.0, "delay": 0.0},
