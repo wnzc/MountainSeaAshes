@@ -203,10 +203,9 @@ func _draw_base() -> void:
 	effect_layer.add_child(seed)
 
 func _push_off_path(p: Vector2, gap: float) -> Vector2:
-	# 找最近路径点，把塔位沿法线推到 gap 外
+	# 将塔位推到距离路径中心线至少 gap 的位置（gap 应 > 半路宽）
 	var best_d := INF
-	var best_seg_a := p
-	var best_seg_b := p
+	var best_proj := p
 	for i in DataRegistry.MAP["path"].size() - 1:
 		var a: Vector2 = DataRegistry.MAP["path"][i]
 		var b: Vector2 = DataRegistry.MAP["path"][i + 1]
@@ -216,21 +215,21 @@ func _push_off_path(p: Vector2, gap: float) -> Vector2:
 		var d := p.distance_to(proj)
 		if d < best_d:
 			best_d = d
-			best_seg_a = a
-			best_seg_b = b
+			best_proj = proj
 	if best_d >= gap:
 		return p
-	var dir := (best_seg_b - best_seg_a).normalized()
-	var n := Vector2(-dir.y, dir.x)
-	# 选离原始点更近的法线方向
-	var c1 := p + n * gap
-	var c2 := p - n * gap
-	return c1 if c1.distance_to(p) <= c2.distance_to(p) else c2
+	if best_d < 0.5:
+		# 正在路径上：默认推到右侧
+		var seg: Vector2 = (DataRegistry.MAP["path"][mini(1, DataRegistry.MAP["path"].size() - 1)] - DataRegistry.MAP["path"][0])
+		var n := Vector2(-seg.y, seg.x).normalized()
+		return best_proj + n * gap
+	var side := (p - best_proj).normalized()
+	return best_proj + side * gap
 
 func _setup_slots() -> void:
 	for s in DataRegistry.MAP["slots"]:
 		# 底座贴着路、但不压在路上
-		var slot_pos: Vector2 = _push_off_path(s["pos"], 70.0)
+		var slot_pos: Vector2 = _push_off_path(s["pos"], 108.0)
 		var slot := {
 			"id": s["id"], "pos": slot_pos, "neighbors": s["neighbors"],
 			"spirit": null,
@@ -253,7 +252,7 @@ func _setup_slots() -> void:
 		var btex: Texture2D = load("res://assets/ui/tower_base.png")
 		if btex:
 			base_spr.texture = btex
-			var bs := 108.0 / maxf(btex.get_width(), 1.0)
+			var bs := 92.0 / maxf(btex.get_width(), 1.0)
 			base_spr.scale = Vector2(bs, bs)
 			base_spr.offset = Vector2(0, -btex.get_height() * bs * 0.15)
 		base_spr.position = slot_pos + Vector2(0, 10)
@@ -262,9 +261,11 @@ func _setup_slots() -> void:
 		base_spr.set_meta("base_scale", base_spr.scale)
 		slot_layer.add_child(base_spr)
 
+		# 不再使用装饰圆环
 		var ring := _make_ring(Color(1.0, 0.85, 0.4, 0.0), 52.0, 2.0)
 		ring.position = slot_pos + Vector2(0, 10)
 		ring.set_meta("slot_visual", s["id"])
+		ring.visible = false
 		slot_layer.add_child(ring)
 
 func _setup_water() -> void:
@@ -311,8 +312,8 @@ func _setup_ui() -> void:
 	var panel_tall: Texture2D = load("res://assets/ui/panel_tall.png")
 
 	_apply_panel_tex(slot_panel, panel_dialog, 36, Color(0.12, 0.1, 0.08))
-	_apply_panel_tex(pause_panel, panel_tall, 44, Color(0.12, 0.1, 0.08))
-	_apply_panel_tex(result_panel, panel_tall, 44, Color(0.12, 0.1, 0.08))
+	_apply_panel_tex(pause_panel, panel_tall, 36, Color(0.12, 0.1, 0.08))
+	_apply_panel_tex(result_panel, panel_tall, 36, Color(0.12, 0.1, 0.08))
 
 	# 顶部文字信息用深色底图框，字用浅色
 	for lab in [hud_wave, hud_hp, hud_gold]:
@@ -479,10 +480,10 @@ func _apply_panel_tex(panel: PanelContainer, tex: Texture2D, margin: float, font
 	sb.texture_margin_right = margin
 	sb.texture_margin_top = margin
 	sb.texture_margin_bottom = margin
-	sb.content_margin_left = 22
-	sb.content_margin_right = 22
-	sb.content_margin_top = 18
-	sb.content_margin_bottom = 18
+	sb.content_margin_left = 24
+	sb.content_margin_right = 24
+	sb.content_margin_top = 20
+	sb.content_margin_bottom = 20
 	panel.add_theme_stylebox_override("panel", sb)
 
 func _apply_label_plate(label: Label, tex: Texture2D) -> void:
@@ -490,14 +491,15 @@ func _apply_label_plate(label: Label, tex: Texture2D) -> void:
 		return
 	var sb := StyleBoxTexture.new()
 	sb.texture = tex
-	sb.texture_margin_left = 28
-	sb.texture_margin_right = 28
-	sb.texture_margin_top = 18
-	sb.texture_margin_bottom = 18
-	sb.content_margin_left = 16
-	sb.content_margin_right = 16
-	sb.content_margin_top = 8
-	sb.content_margin_bottom = 8
+	# 与 256x96 胶囊底图匹配
+	sb.texture_margin_left = 40
+	sb.texture_margin_right = 40
+	sb.texture_margin_top = 28
+	sb.texture_margin_bottom = 28
+	sb.content_margin_left = 18
+	sb.content_margin_right = 18
+	sb.content_margin_top = 10
+	sb.content_margin_bottom = 10
 	label.add_theme_stylebox_override("normal", sb)
 
 func _attach_icon(btn: Button, path: String, icon_w: int = 48) -> void:
@@ -763,16 +765,7 @@ func _refresh_slot_visuals() -> void:
 			c.queue_free()
 	for c in slot_layer.get_children():
 		if c is Line2D and c.has_meta("slot_visual"):
-			var sid: String = c.get_meta("slot_visual")
-			var slot: Dictionary = slots[sid]
-			if slot["spirit"]:
-				c.default_color.a = 0.0
-			elif selected_card != "" and gold >= DataRegistry.SPIRITS[selected_card]["cost"]:
-				c.default_color = Color(1.0, 0.85, 0.4, 0.55)
-			elif selected_slot == sid:
-				c.default_color = Color(1.0, 0.85, 0.4, 0.75)
-			else:
-				c.default_color.a = 0.0
+			c.visible = false
 		if c is Sprite2D and c.has_meta("slot_base"):
 			var sid2: String = c.get_meta("slot_base")
 			var slot2: Dictionary = slots[sid2]

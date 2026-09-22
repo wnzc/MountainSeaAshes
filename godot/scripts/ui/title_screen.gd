@@ -12,23 +12,14 @@ func _ready() -> void:
 		art.texture = tex
 
 	_apply_plate(btn_start, "res://assets/ui/btn_cta.png", Vector2(420, 120), "进入山河", 34)
-	_apply_plate(btn_settings, "res://assets/ui/btn_round.png", Vector2(120, 120), "", 18)
-	# 设置图标叠在圆钮上
-	if ResourceLoader.exists("res://assets/ui/btn_settings.png"):
-		btn_settings.icon = load("res://assets/ui/btn_settings.png")
-		btn_settings.expand_icon = true
-		btn_settings.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		btn_settings.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
-		btn_settings.add_theme_constant_override("icon_max_width", 56)
+	_apply_plate(btn_settings, "res://assets/ui/btn_settings.png", Vector2(120, 120), "", 18)
 	btn_settings.tooltip_text = "设置"
 
 	_apply_panel_style(settings_panel, "res://assets/ui/panel_tall.png")
-	var st := get_node_or_null("SettingsPanel/VBox/T") as Label
-	if st:
-		st.add_theme_color_override("font_color", Color(0.15, 0.14, 0.1))
-	var sh := get_node_or_null("SettingsPanel/VBox/Hint") as Label
-	if sh:
-		sh.add_theme_color_override("font_color", Color(0.25, 0.22, 0.16))
+	for lab_path in ["SettingsPanel/VBox/T", "SettingsPanel/VBox/Hint"]:
+		var lab := get_node_or_null(lab_path) as Label
+		if lab:
+			lab.add_theme_color_override("font_color", Color(0.98, 0.94, 0.82))
 
 	btn_start.pressed.connect(func():
 		_pop(btn_start, 0.88)
@@ -52,10 +43,10 @@ func _apply_plate(btn: Button, plate: String, size: Vector2, text: String, font_
 		var sb := StyleBoxTexture.new()
 		sb.texture = load(plate)
 		# 9-slice，适配按钮高度
-		sb.texture_margin_left = 28
-		sb.texture_margin_right = 28
-		sb.texture_margin_top = 28
-		sb.texture_margin_bottom = 28
+		sb.texture_margin_left = 32
+		sb.texture_margin_right = 32
+		sb.texture_margin_top = 32
+		sb.texture_margin_bottom = 32
 		sb.content_margin_left = 18
 		sb.content_margin_right = 18
 		sb.content_margin_top = 10
@@ -70,10 +61,10 @@ func _apply_panel_style(panel: PanelContainer, plate: String) -> void:
 		return
 	var sb := StyleBoxTexture.new()
 	sb.texture = load(plate)
-	sb.texture_margin_left = 40
-	sb.texture_margin_right = 40
-	sb.texture_margin_top = 40
-	sb.texture_margin_bottom = 40
+	sb.texture_margin_left = 36
+	sb.texture_margin_right = 36
+	sb.texture_margin_top = 36
+	sb.texture_margin_bottom = 36
 	sb.content_margin_left = 28
 	sb.content_margin_right = 28
 	sb.content_margin_top = 24
