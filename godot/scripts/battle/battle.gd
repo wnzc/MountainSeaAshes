@@ -1338,7 +1338,9 @@ func _execute_reaction(target, reaction: Dictionary, incoming: int) -> void:
 				if _point_in_zone(pos, z):
 					z["iced_until"] = Time.get_ticks_msec() / 1000.0 + 4.0
 					if not z["persistent"] and z.has("visual") and is_instance_valid(z["visual"]):
-						z["visual"].color = Color(0.66, 0.83, 0.91, 0.4)
+						for child in z["visual"].get_children():
+							if child is Polygon2D:
+								child.color = Color(0.66, 0.83, 0.91, 0.32)
 
 	if reaction.get("bounce", false):
 		_chain_lightning(target, reaction)
