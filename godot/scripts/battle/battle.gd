@@ -82,7 +82,7 @@ func _setup_map() -> void:
 		bg.centered = false
 		bg.scale = Vector2(1080.0 / tex.get_width(), 1920.0 / tex.get_height())
 
-	path_points = DataRegistry.MAP["path"]
+	path_points = _smooth_path(DataRegistry.MAP["path"], 4)
 	path_len = 0.0
 	for i in path_points.size() - 1:
 		path_len += path_points[i].distance_to(path_points[i + 1])
@@ -91,25 +91,64 @@ func _setup_map() -> void:
 	_setup_water()
 	_draw_base()
 
+## Catmull-Rom 样条加密，让路线圆润
+func _smooth_path(src: PackedVector2Array, steps: int = 4) -> PackedVector2Array:
+	if src.size() < 2:
+		return src
+	var out := PackedVector2Array()
+	var n := src.size()
+	for i in n - 1:
+		var p0: Vector2 = src[maxi(i - 1, 0)]
+		var p1: Vector2 = src[i]
+		var p2: Vector2 = src[i + 1]
+		var p3: Vector2 = src[mini(i + 2, n - 1)]
+		for s in steps:
+			var t := float(s) / float(steps)
+			out.append(_catmull_rom(p0, p1, p2, p3, t))
+	out.append(src[n - 1])
+	# 再轻量磨角一次
+	return out
+
+func _catmull_rom(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
+	var t2 := t * t
+	var t3 := t2 * t
+	return 0.5 * (
+		(2.0 * p1) +
+		(-p0 + p2) * t +
+		(2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2 +
+		(-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3
+	)
+
 func _draw_path() -> void:
-	# 路基描边（更清晰）
+	# 软路基（更圆润的描边）
+	var soft := Line2D.new()
+	soft.points = path_points
+	soft.width = 110.0
+	soft.default_color = Color(0.2, 0.16, 0.1, 0.22)
+	soft.joint_mode = Line2D.LINE_JOINT_ROUND
+	soft.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	soft.end_cap_mode = Line2D.LINE_CAP_ROUND
+	soft.antialiased = true
+	path_layer.add_child(soft)
+
 	var outline := Line2D.new()
 	outline.points = path_points
-	outline.width = 96.0
-	outline.default_color = Color(0.22, 0.18, 0.12, 0.55)
+	outline.width = 92.0
+	outline.default_color = Color(0.24, 0.2, 0.13, 0.5)
 	outline.joint_mode = Line2D.LINE_JOINT_ROUND
 	outline.begin_cap_mode = Line2D.LINE_CAP_ROUND
 	outline.end_cap_mode = Line2D.LINE_CAP_ROUND
+	outline.antialiased = true
 	path_layer.add_child(outline)
 
-	# 路面 + 可选纹理
 	var road := Line2D.new()
 	road.points = path_points
-	road.width = 72.0
+	road.width = 74.0
 	road.default_color = Color("c4b49a")
 	road.joint_mode = Line2D.LINE_JOINT_ROUND
 	road.begin_cap_mode = Line2D.LINE_CAP_ROUND
 	road.end_cap_mode = Line2D.LINE_CAP_ROUND
+	road.antialiased = true
 	var ptex: Texture2D = load("res://assets/maps/path_texture.png")
 	if ptex:
 		road.texture = ptex
@@ -117,14 +156,14 @@ func _draw_path() -> void:
 		road.width = 78.0
 	path_layer.add_child(road)
 
-	# 内侧亮边
 	var inner := Line2D.new()
 	inner.points = path_points
-	inner.width = 52.0
-	inner.default_color = Color(0.86, 0.80, 0.68, 0.35)
+	inner.width = 48.0
+	inner.default_color = Color(0.9, 0.84, 0.7, 0.22)
 	inner.joint_mode = Line2D.LINE_JOINT_ROUND
 	inner.begin_cap_mode = Line2D.LINE_CAP_ROUND
 	inner.end_cap_mode = Line2D.LINE_CAP_ROUND
+	inner.antialiased = true
 	path_layer.add_child(inner)
 
 	# 入口标记
