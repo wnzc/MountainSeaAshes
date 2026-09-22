@@ -1,0 +1,465 @@
+/* 山海余烬 · 镜水涧 Demo · 界面样式
+ * 现代极简 UI + 少量宣纸/印章元素（对应 GDD §11）
+ */
+
+:root {
+  --ink: #1a1f1d;
+  --paper: #f3efe4;
+  --paper-dim: rgba(243, 239, 228, 0.92);
+  --accent: #c45c3a;
+  --gold: #d4a84b;
+  --panel: rgba(20, 24, 22, 0.78);
+  --panel-border: rgba(243, 239, 228, 0.18);
+  --text: #f3efe4;
+  --muted: rgba(243, 239, 228, 0.65);
+  --fire: #e85d3a;
+  --water: #3ba7c4;
+  --lightning: #7b5cff;
+  --wind: #5cb88a;
+  --ice: #a8d4e8;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  height: 100%;
+  background: #1a2220;
+  color: var(--text);
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#frame {
+  position: relative;
+  width: min(100vw, calc(100vh * 9 / 16));
+  height: min(100vh, calc(100vw * 16 / 9));
+  max-width: 540px;
+  background: #2a3330;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+#game {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: pointer;
+  touch-action: none;
+}
+
+/* ── 顶部 HUD ── */
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+#hud > * {
+  pointer-events: auto;
+}
+
+.hud-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+
+.hud-pill .ico {
+  font-size: 14px;
+}
+
+.hud-spacer {
+  flex: 1;
+}
+
+.hud-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.hud-btn:active {
+  transform: scale(0.94);
+}
+
+/* Boss 血条 */
+#boss-bar {
+  position: absolute;
+  top: 52px;
+  left: 12%;
+  right: 12%;
+  z-index: 5;
+  pointer-events: none;
+}
+
+#boss-bar .label {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+  text-shadow: 0 1px 2px #000;
+}
+
+#boss-bar .track {
+  height: 10px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+#boss-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #8b1e1e, #e85d3a);
+  transition: width 0.15s linear;
+}
+
+/* ── 底部灵兽卡 ── */
+#card-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 8px 14px;
+  z-index: 5;
+  background: linear-gradient(transparent, rgba(10, 14, 12, 0.55) 30%);
+}
+
+.spirit-card {
+  width: 58px;
+  height: 72px;
+  border-radius: 14px;
+  border: 1.5px solid var(--panel-border);
+  background: var(--panel);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: transform 0.12s ease, border-color 0.12s, box-shadow 0.12s;
+}
+
+.spirit-card .card-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.spirit-card .card-name {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.spirit-card .card-cost {
+  font-size: 11px;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.spirit-card.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(212, 168, 75, 0.35), 0 0 16px rgba(212, 168, 75, 0.25);
+  transform: translateY(-4px);
+}
+
+.spirit-card.disabled {
+  opacity: 0.4;
+  filter: grayscale(0.6);
+}
+
+.spirit-card:active {
+  transform: scale(0.96);
+}
+
+/* ── 塔位菜单 ── */
+#slot-panel {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 100px;
+  z-index: 6;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 14px;
+  backdrop-filter: blur(10px);
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.panel-title small {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.panel-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.panel-hint {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.panel-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.panel-actions button {
+  flex: 1;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(212, 168, 75, 0.2);
+  color: var(--gold);
+  border: 1px solid rgba(212, 168, 75, 0.35);
+}
+
+.panel-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.panel-actions button#btn-sell {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  border-color: var(--panel-border);
+}
+
+/* ── 连锁提示 ── */
+#chain-banner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 38%;
+  text-align: center;
+  z-index: 8;
+  pointer-events: none;
+  font-size: 28px;
+  font-weight: 800;
+  color: #ffd27a;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+  letter-spacing: 0.08em;
+  animation: pop 0.35s ease;
+}
+
+#chain-banner.big {
+  font-size: 40px;
+  color: #ff9b6a;
+}
+
+#chain-banner.ultimate {
+  font-size: 48px;
+  color: #ff6b4a;
+  animation: pop 0.4s ease, glow 1.2s ease;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    text-shadow: 0 0 12px rgba(255, 107, 74, 0.4);
+  }
+  50% {
+    text-shadow: 0 0 28px rgba(255, 210, 122, 0.9);
+  }
+}
+
+/* ── 覆盖层 ── */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 12, 0.72);
+  backdrop-filter: blur(6px);
+  padding: 24px;
+}
+
+.overlay.hidden,
+.hidden {
+  display: none !important;
+}
+
+.panel {
+  width: min(100%, 320px);
+  background: rgba(28, 34, 30, 0.95);
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  padding: 28px 22px;
+  text-align: center;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+.panel h1 {
+  font-family: 'STKaiti', 'KaiTi', 'PingFang SC', serif;
+  font-size: 36px;
+  letter-spacing: 0.2em;
+  margin-bottom: 6px;
+  color: var(--paper);
+}
+
+.panel h1 .en {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  color: var(--muted);
+  font-family: sans-serif;
+  margin-top: 4px;
+}
+
+.panel .sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.panel .tagline {
+  font-size: 12px;
+  color: var(--gold);
+  margin-bottom: 18px;
+  letter-spacing: 0.12em;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #d4a84b, #b8892e);
+  color: #1a1f1d;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border: 1px solid var(--panel-border);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+#result-title.win {
+  color: #d4a84b;
+}
+
+#result-title.lose {
+  color: #c23b2e;
+}
+
+#result-stats {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 10px 0 6px;
+}
+
+/* Toast */
+#toast {
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+/* 小屏适配 */
+@media (max-height: 640px) {
+  .spirit-card {
+    width: 52px;
+    height: 64px;
+  }
+  .spirit-card .card-icon {
+    font-size: 18px;
+  }
+}
