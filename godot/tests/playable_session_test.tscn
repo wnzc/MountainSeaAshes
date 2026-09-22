@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://playable_session_test_sh"]
+
+[ext_resource type="Script" path="res://tests/playable_session_test.gd" id="1"]
+
+[node name="PlayableSessionTest" type="Node"]
+script = ExtResource("1")
