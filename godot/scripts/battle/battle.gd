@@ -202,15 +202,42 @@ func _draw_base() -> void:
 	seed.position = base
 	effect_layer.add_child(seed)
 
+func _push_off_path(p: Vector2, gap: float) -> Vector2:
+	# 找最近路径点，把塔位沿法线推到 gap 外
+	var best_d := INF
+	var best_seg_a := p
+	var best_seg_b := p
+	for i in DataRegistry.MAP["path"].size() - 1:
+		var a: Vector2 = DataRegistry.MAP["path"][i]
+		var b: Vector2 = DataRegistry.MAP["path"][i + 1]
+		var ab := b - a
+		var t := clampf((p - a).dot(ab) / maxf(ab.length_squared(), 0.001), 0.0, 1.0)
+		var proj := a + ab * t
+		var d := p.distance_to(proj)
+		if d < best_d:
+			best_d = d
+			best_seg_a = a
+			best_seg_b = b
+	if best_d >= gap:
+		return p
+	var dir := (best_seg_b - best_seg_a).normalized()
+	var n := Vector2(-dir.y, dir.x)
+	# 选离原始点更近的法线方向
+	var c1 := p + n * gap
+	var c2 := p - n * gap
+	return c1 if c1.distance_to(p) <= c2.distance_to(p) else c2
+
 func _setup_slots() -> void:
 	for s in DataRegistry.MAP["slots"]:
+		# 底座贴着路、但不压在路上
+		var slot_pos: Vector2 = _push_off_path(s["pos"], 70.0)
 		var slot := {
-			"id": s["id"], "pos": s["pos"], "neighbors": s["neighbors"],
+			"id": s["id"], "pos": slot_pos, "neighbors": s["neighbors"],
 			"spirit": null,
 		}
 		slots[s["id"]] = slot
 		var body := Area2D.new()
-		body.position = s["pos"]
+		body.position = slot_pos
 		body.set_meta("slot_id", s["id"])
 		body.input_pickable = true
 		var shape := CollisionShape2D.new()
@@ -221,24 +248,24 @@ func _setup_slots() -> void:
 		body.input_event.connect(_on_slot_input.bind(s["id"]))
 		slot_layer.add_child(body)
 
-		# 仅选中/可放置时的光圈，默认隐藏
-		var ring := _make_ring(Color(1.0, 0.85, 0.4, 0.0), 48.0, 2.0)
-		ring.position = s["pos"] + Vector2(0, 8)
-		ring.set_meta("slot_visual", s["id"])
-		slot_layer.add_child(ring)
-
-		# 灵兽底座
+		# 不绘制背景圆圈；仅在可放置时淡淡高亮底座
 		var base_spr := Sprite2D.new()
 		var btex: Texture2D = load("res://assets/ui/tower_base.png")
 		if btex:
 			base_spr.texture = btex
-			var bs := 100.0 / maxf(btex.get_width(), 1.0)
+			var bs := 108.0 / maxf(btex.get_width(), 1.0)
 			base_spr.scale = Vector2(bs, bs)
 			base_spr.offset = Vector2(0, -btex.get_height() * bs * 0.15)
-		base_spr.position = s["pos"] + Vector2(0, 8)
-		base_spr.modulate = Color(1, 1, 1, 0.88)
+		base_spr.position = slot_pos + Vector2(0, 10)
+		base_spr.modulate = Color(1, 1, 1, 0.9)
 		base_spr.set_meta("slot_base", s["id"])
+		base_spr.set_meta("base_scale", base_spr.scale)
 		slot_layer.add_child(base_spr)
+
+		var ring := _make_ring(Color(1.0, 0.85, 0.4, 0.0), 52.0, 2.0)
+		ring.position = slot_pos + Vector2(0, 10)
+		ring.set_meta("slot_visual", s["id"])
+		slot_layer.add_child(ring)
 
 func _setup_water() -> void:
 	for w in DataRegistry.MAP["water_zones"]:
@@ -263,43 +290,51 @@ func _make_ring(color: Color, radius: float, width: float) -> Line2D:
 	return ring
 
 func _setup_ui() -> void:
-	# 统一简洁主题：去掉默认紫框/焦点框
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.1, 0.09, 0.78)
-	style.set_corner_radius_all(14)
-	style.set_border_width_all(1)
-	style.border_color = Color(1, 1, 1, 0.08)
-	style.content_margin_left = 14
-	style.content_margin_right = 14
-	style.content_margin_top = 10
-	style.content_margin_bottom = 10
+	# 底图风格
+	var hud_tex: Texture2D = load("res://assets/ui/hud_bar.png")
+	if hud_tex:
+		var hsb := StyleBoxTexture.new()
+		hsb.texture = hud_tex
+		hsb.texture_margin_left = 48
+		hsb.texture_margin_right = 48
+		hsb.texture_margin_top = 24
+		hsb.texture_margin_bottom = 24
+		hsb.content_margin_left = 16
+		hsb.content_margin_right = 16
+		hsb.content_margin_top = 10
+		hsb.content_margin_bottom = 10
+		# TopHUD 是 HBox，外包一层 Panel 由 battle.tscn 负责；这里给按钮/面板上底图
+		pass
+
+	var panel_toast: Texture2D = load("res://assets/ui/panel_toast.png")
+	var panel_dialog: Texture2D = load("res://assets/ui/panel_dialog.png")
+	var panel_tall: Texture2D = load("res://assets/ui/panel_tall.png")
+
+	_apply_panel_tex(slot_panel, panel_dialog, 36, Color(0.12, 0.1, 0.08))
+	_apply_panel_tex(pause_panel, panel_tall, 44, Color(0.12, 0.1, 0.08))
+	_apply_panel_tex(result_panel, panel_tall, 44, Color(0.12, 0.1, 0.08))
+
+	# 顶部文字信息用深色底图框，字用浅色
+	for lab in [hud_wave, hud_hp, hud_gold]:
+		_apply_label_plate(lab, panel_toast)
+		lab.add_theme_color_override("font_color", Color(0.98, 0.94, 0.82))
+		lab.add_theme_font_size_override("font_size", 28)
+
+	# 提示弹窗
+	_apply_label_plate(toast_label, panel_toast)
+	toast_label.add_theme_color_override("font_color", Color(0.98, 0.94, 0.82))
+	toast_label.add_theme_font_size_override("font_size", 24)
+
+	chain_banner.add_theme_color_override("font_outline_color", Color(0.08, 0.06, 0.04, 0.65))
+	chain_banner.add_theme_constant_override("outline_size", 8)
 
 	var btn_style := StyleBoxFlat.new()
-	btn_style.bg_color = Color(0.12, 0.14, 0.12, 0.85)
+	btn_style.bg_color = Color(0.12, 0.14, 0.12, 0.0)
 	btn_style.set_corner_radius_all(12)
 	btn_style.set_border_width_all(0)
-	btn_style.content_margin_left = 8
-	btn_style.content_margin_right = 8
-	btn_style.content_margin_top = 6
-	btn_style.content_margin_bottom = 6
-
 	var btn_hover := btn_style.duplicate()
-	btn_hover.bg_color = Color(0.2, 0.22, 0.18, 0.9)
-
-	var btn_focus := btn_style.duplicate()
-	btn_focus.bg_color = Color(0.2, 0.22, 0.18, 0.9)
-	btn_focus.border_color = Color(0.83, 0.66, 0.29, 0.35)
-	btn_focus.set_border_width_all(1)
-
-	for node in [$UI/TopHUD, $UI/SlotPanel, $UI/PausePanel, $UI/ResultPanel]:
-		if node is PanelContainer:
-			node.add_theme_stylebox_override("panel", style)
-		if node is CanvasItem:
-			node.add_theme_stylebox_override("panel", style)
-
-	$UI/SlotPanel.add_theme_stylebox_override("panel", style)
-	$UI/PausePanel.add_theme_stylebox_override("panel", style)
-	$UI/ResultPanel.add_theme_stylebox_override("panel", style)
+	btn_hover.bg_color = Color(0.2, 0.22, 0.18, 0.35)
+	var btn_focus := btn_hover.duplicate()
 
 	btn_pause.pressed.connect(func():
 		_click_feedback(btn_pause)
@@ -335,50 +370,55 @@ func _setup_ui() -> void:
 	toast_label.visible = false
 	boss_bar.visible = false
 
-	# Boss 血条去掉默认紫填充
 	var bar_bg := StyleBoxFlat.new()
-	bar_bg.bg_color = Color(0, 0, 0, 0.45)
-	bar_bg.set_corner_radius_all(6)
+	bar_bg.bg_color = Color(0, 0, 0, 0.5)
+	bar_bg.set_corner_radius_all(8)
 	var bar_fill := StyleBoxFlat.new()
 	bar_fill.bg_color = Color(0.78, 0.28, 0.2)
-	bar_fill.set_corner_radius_all(6)
+	bar_fill.set_corner_radius_all(8)
 	boss_bar.add_theme_stylebox_override("background", bar_bg)
 	boss_bar.add_theme_stylebox_override("fill", bar_fill)
 
+	# 右上角按钮更大
+	btn_pause.custom_minimum_size = Vector2(96, 96)
+	btn_speed.custom_minimum_size = Vector2(96, 96)
 	_style_button(btn_pause, btn_style, btn_hover, btn_focus)
 	_style_button(btn_speed, btn_style, btn_hover, btn_focus)
-	_attach_icon(btn_pause, "res://assets/ui/btn_pause.png")
-	_attach_icon(btn_speed, "res://assets/ui/btn_speed.png")
-	# 音效按钮（场景里若无则动态加）
+	_attach_icon(btn_pause, "res://assets/ui/btn_pause.png", 64)
+	_attach_icon(btn_speed, "res://assets/ui/btn_speed.png", 64)
+
 	var sound_btn: Button = get_node_or_null("UI/TopHUD/BtnSound")
 	if sound_btn == null:
 		sound_btn = Button.new()
 		sound_btn.name = "BtnSound"
-		sound_btn.custom_minimum_size = Vector2(72, 64)
 		$UI/TopHUD.add_child(sound_btn)
+	sound_btn.custom_minimum_size = Vector2(96, 96)
 	_style_button(sound_btn, btn_style, btn_hover, btn_focus)
-	_attach_icon(sound_btn, "res://assets/ui/btn_sound.png")
+	_attach_icon(sound_btn, "res://assets/ui/btn_sound.png", 64)
 	sound_btn.pressed.connect(func():
 		_click_feedback(sound_btn)
 		AudioManager.play("click")
 	)
 
-	_attach_icon($UI/SlotPanel/VBox/Actions/BtnUpgrade, "res://assets/ui/btn_upgrade.png")
-	_attach_icon($UI/SlotPanel/VBox/Actions/BtnSell, "res://assets/ui/btn_sell.png")
-	_attach_icon($UI/PausePanel/VBox/BtnResume, "res://assets/ui/btn_primary.png")
-	_attach_icon($UI/PausePanel/VBox/BtnRestart, "res://assets/ui/btn_retry.png")
-	_attach_icon($UI/ResultPanel/VBox/BtnRetry, "res://assets/ui/btn_retry.png")
-	_attach_icon($UI/ResultPanel/VBox/BtnHome, "res://assets/ui/btn_home.png")
+	_attach_icon(btn_upgrade, "res://assets/ui/btn_upgrade.png", 36)
+	_attach_icon(btn_sell, "res://assets/ui/btn_sell.png", 36)
+	_attach_icon($UI/PausePanel/VBox/BtnResume, "res://assets/ui/btn_cta.png", 40)
+	_attach_icon($UI/PausePanel/VBox/BtnRestart, "res://assets/ui/btn_retry.png", 36)
+	_attach_icon($UI/ResultPanel/VBox/BtnRetry, "res://assets/ui/btn_retry.png", 36)
+	_attach_icon($UI/ResultPanel/VBox/BtnHome, "res://assets/ui/btn_home.png", 36)
 
 	for b in [
-		btn_pause, btn_speed, sound_btn,
-		$UI/SlotPanel/VBox/Actions/BtnUpgrade, $UI/SlotPanel/VBox/Actions/BtnSell,
+		btn_pause, btn_speed, sound_btn, btn_upgrade, btn_sell,
 		$UI/PausePanel/VBox/BtnResume, $UI/PausePanel/VBox/BtnRestart,
 		$UI/ResultPanel/VBox/BtnRetry, $UI/ResultPanel/VBox/BtnHome,
 	]:
 		_wire_click_fx(b)
 
-	# 灵兽卡点击弹一下
+	# 面板文字浅色
+	for lab in [slot_panel_title, slot_panel_meta, result_title, result_stats]:
+		lab.add_theme_color_override("font_color", Color(0.98, 0.94, 0.82))
+	slot_panel_meta.add_theme_color_override("font_color", Color(0.85, 0.8, 0.68))
+
 	# 底部灵兽卡：立绘按钮
 	for id in DataRegistry.SPIRIT_ORDER:
 		var cfg: Dictionary = DataRegistry.SPIRITS[id]
@@ -430,14 +470,44 @@ func _style_button(btn: Button, normal: StyleBoxFlat, hover: StyleBoxFlat, focus
 	btn.add_theme_color_override("font_hover_color", Color(1, 0.95, 0.8))
 	btn.add_theme_color_override("font_pressed_color", Color(1, 0.95, 0.8))
 
-func _attach_icon(btn: Button, path: String) -> void:
+func _apply_panel_tex(panel: PanelContainer, tex: Texture2D, margin: float, font_col: Color) -> void:
+	if tex == null:
+		return
+	var sb := StyleBoxTexture.new()
+	sb.texture = tex
+	sb.texture_margin_left = margin
+	sb.texture_margin_right = margin
+	sb.texture_margin_top = margin
+	sb.texture_margin_bottom = margin
+	sb.content_margin_left = 22
+	sb.content_margin_right = 22
+	sb.content_margin_top = 18
+	sb.content_margin_bottom = 18
+	panel.add_theme_stylebox_override("panel", sb)
+
+func _apply_label_plate(label: Label, tex: Texture2D) -> void:
+	if tex == null:
+		return
+	var sb := StyleBoxTexture.new()
+	sb.texture = tex
+	sb.texture_margin_left = 28
+	sb.texture_margin_right = 28
+	sb.texture_margin_top = 18
+	sb.texture_margin_bottom = 18
+	sb.content_margin_left = 16
+	sb.content_margin_right = 16
+	sb.content_margin_top = 8
+	sb.content_margin_bottom = 8
+	label.add_theme_stylebox_override("normal", sb)
+
+func _attach_icon(btn: Button, path: String, icon_w: int = 48) -> void:
 	if not ResourceLoader.exists(path):
 		return
 	btn.icon = load(path)
 	btn.expand_icon = true
 	btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
-	btn.add_theme_constant_override("icon_max_width", 48)
+	btn.add_theme_constant_override("icon_max_width", icon_w)
 	btn.add_theme_constant_override("h_separation", 8)
 
 func _wire_click_fx(btn: Button) -> void:
@@ -512,7 +582,16 @@ func _handle_slot_click(slot_id: String) -> void:
 	else:
 		selected_slot = slot_id
 		EventBus.slot_selected.emit(slot_id)
+		_enlarge_base(slot_id)
 	_refresh_slot_visuals()
+
+func _enlarge_base(slot_id: String) -> void:
+	for c in slot_layer.get_children():
+		if c is Sprite2D and c.has_meta("slot_base") and c.get_meta("slot_base") == slot_id:
+			var base_scale: Vector2 = c.get_meta("base_scale")
+			var tw := create_tween()
+			tw.tween_property(c, "scale", base_scale * 1.35, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			tw.tween_property(c, "scale", base_scale * 1.15, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _on_slot_selected(slot_id: String) -> void:
 	if slot_id == "" or not slots.has(slot_id):
@@ -1488,10 +1567,7 @@ func _show_toast(msg: String) -> void:
 	toast_label.text = msg
 	toast_label.visible = true
 	toast_label.modulate.a = 1.0
-	# 弱化底框：只保留轻描边
-	toast_label.add_theme_color_override("font_color", Color(0.95, 0.92, 0.82, 0.9))
-	toast_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.35))
-	toast_label.add_theme_constant_override("outline_size", 4)
+	toast_label.add_theme_color_override("font_color", Color(0.98, 0.94, 0.82))
 	var tw := create_tween()
 	tw.tween_interval(2.0)
 	tw.tween_property(toast_label, "modulate:a", 0.0, 0.3)

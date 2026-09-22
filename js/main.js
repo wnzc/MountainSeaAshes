@@ -206,6 +206,13 @@ export function initUI(game) {
 }
 
 export function bindInput(game, canvas) {
+  // 按钮点击反馈
+  for (const btn of document.querySelectorAll('button')) {
+    btn.addEventListener('pointerdown', () => btn.classList.add('is-press'));
+    btn.addEventListener('pointerup', () => btn.classList.remove('is-press'));
+    btn.addEventListener('pointerleave', () => btn.classList.remove('is-press'));
+  }
+
   const toLogical = (evt) => {
     const rect = canvas.getBoundingClientRect();
     const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
