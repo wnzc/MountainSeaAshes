@@ -1,0 +1,25 @@
+# Local / tooling
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+.cursor/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Playwright CLI session cache & QA screenshots
+.playwright-cli/
+output/
+
+# Env / secrets
+.env
+.env.*
+*.pem
+*.key
+
+# OS / editor state
+*.swp
+*~
