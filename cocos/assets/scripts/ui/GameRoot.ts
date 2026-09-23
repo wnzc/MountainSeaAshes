@@ -42,7 +42,7 @@ export class GameRoot extends Component {
   private enemySprites = new Map<number, { node: Node; sprite: Sprite }>();
   private debugTimer = 0;
   private animTime = 0;
-  private frameFx: Array<{ x: number; y: number; color?: string; type?: string }> = [];
+  private frameFx: any[] = [];
 
   onLoad(): void {
     try {
@@ -332,7 +332,7 @@ export class GameRoot extends Component {
     // 本帧特效（命中/连锁/升级）
     for (const fx of this.frameFx) {
       const [fx2, fy] = this.v(fx as { x: number; y: number });
-      const col = this.hex((fx as { color?: string }).color || '#FFD27A');
+      const col = this.hex(String((fx && (fx as any).color) || '#FFD27A'));
       const ftype = (fx as any).type as string;
       if (ftype === 'chain' || ftype === 'reaction') {
         g.strokeColor = col;
