@@ -32,6 +32,7 @@ export class GameRoot extends Component {
   private ui!: GameUI;
   private mapW = MAP.width;
   private mapH = MAP.height;
+  private lastPointer = 0;
 
   onLoad(): void {
     try {
@@ -77,6 +78,9 @@ export class GameRoot extends Component {
 
   private onNodeTouch(e: { getUILocation(): { x: number; y: number } }): void {
     if (!this.battle) return;
+    const now = Date.now();
+    if (now - this.lastPointer < 180) return;
+    this.lastPointer = now;
     const p = e.getUILocation();
     const m = this.screenToMap(p.x, p.y);
     this.battle.handlePointer(m.x, m.y);
@@ -122,6 +126,9 @@ export class GameRoot extends Component {
 
   private onTouch(e: EventTouch): void {
     if (!this.battle) return;
+    const now = Date.now();
+    if (now - this.lastPointer < 180) return;
+    this.lastPointer = now;
     const p = e.getUILocation();
     const m = this.screenToMap(p.x, p.y);
     this.battle.handlePointer(m.x, m.y);
@@ -129,6 +136,9 @@ export class GameRoot extends Component {
 
   private onMouseDown(e: EventMouse): void {
     if (!this.battle) return;
+    const now = Date.now();
+    if (now - this.lastPointer < 180) return;
+    this.lastPointer = now;
     const p = (e as unknown as { getUILocation(): { x: number; y: number } }).getUILocation();
     if (!p) return;
     const m = this.screenToMap(p.x, p.y);

@@ -259,16 +259,22 @@ export class GameUI {
       drawRect(wg, p.x - w.w / 2, p.y - w.h / 2, w.w, w.h, new Color(90, 160, 180, 70));
     }
 
-    // 塔位
+    // 塔位：底座 + 明确点击热区（全局 input 不稳时仍可放置）
     const slotNode = new Node('Slots');
     ensureTransform(slotNode, this.mapW, this.mapH);
     this.world.addChild(slotNode);
-    const sg = slotNode.addComponent(Graphics);
     for (const s of MAP.slots) {
       const p = this.toLocal(s.x, s.y);
-      // 与 Godot 相同：塔座图，不画装饰圆
-      const base = makeSpriteNode('Base_' + s.id, 92, 'textures/ui/tower_base', slotNode);
+      const base = makeSpriteNode('Base_' + s.id, 100, 'textures/ui/tower_base', slotNode);
       base.node.setPosition(p.x, p.y);
+      const hit = new Node('SlotHit_' + s.id);
+      ensureTransform(hit, 140, 140);
+      hit.setPosition(p.x, p.y);
+      slotNode.addChild(hit);
+      // 仅一种点击
+      bindClick(hit, () => {
+        this.battle.handlePointer(s.x, s.y);
+      });
     }
 
     // 灵种
@@ -425,15 +431,21 @@ export class GameUI {
       x0 += cw + gap;
       bar.addChild(card);
       // 与 Godot 相同：底板 + 立绘 + 名称/费用（加大）
-      this.makePlate(card, 'Frame', cw, ch, 'textures/ui/card_frame_' + (i % 5));
+      this.makePlate(card, 'Frame', cw, ch, 'textures/ui/panel_dialog');
       const port = makeSpriteNode('Portrait', 150, cfg.sprite, card);
       port.node.setPosition(0, 36);
       this.cardPortraits.set(id, port.sprite);
       this.makeLabel(card, cfg.name, 40, hexColor('#FAF3E4'), cw, 52).node.setPosition(0, -58);
       this.makeLabel(card, String(cfg.cost), 36, hexColor('#D4A84B'), cw, 46).node.setPosition(0, -100);
       card.addComponent(Button);
-      const pick = () => this.battle.selectCard(id);
-      card.on(Button.EventType.CLICK, pick);
+      let lastPick = 0;
+      const pick = () => {
+        const now = Date.now();
+        if (now - lastPick < 250) return;
+        lastPick = now;
+        this.battle.selectCard(id);
+      };
+      // 只绑一种点击，避免 CLICK+TOUCH 双触发把选中又取消
       bindClick(card, pick);
       this.cardNodes.push(card);
     }
@@ -476,7 +488,7 @@ export class GameUI {
       this.battle.paused = false;
       this.pausePanel.active = false;
       this.battle.start();
-    }, 'textures/ui/btn_retry', 36).node.setPosition(0, -150);
+    }, 'textures/ui/btn_cta', 36).node.setPosition(0, -150);
     this.pausePanel.active = false;
 
     // 结算（panel_tall）
@@ -486,12 +498,12 @@ export class GameUI {
     this.resultStats.node.setPosition(0, 40);
     this.makeButton(this.resultPanel, '再来一局', 360, 88, () => {
       this.resultPanel.active = false;
-      this.battle.start();
-    }, 'textures/ui/btn_retry', 36).node.setPosition(0, -60);
+      this.enterBattle();
+    }, 'textures/ui/btn_cta', 36).node.setPosition(0, -60);
     this.makeButton(this.resultPanel, '回到封面', 360, 88, () => {
       this.resultPanel.active = false;
       this.showTitle();
-    }, 'textures/ui/btn_home', 36).node.setPosition(0, -170);
+    }, 'textures/ui/btn_cta', 36).node.setPosition(0, -170);
     this.resultPanel.active = false;
   }
 
@@ -625,11 +637,11 @@ export class GameUI {
       const key = s.slotId;
       let view = this.spiritSprites.get(key);
       if (!view) {
-        view = makeSpriteNode('Spirit_' + key, 120, s.config.sprite, this.unitLayer);
+        view = makeSpriteNode('Spirit_' + key, 160, s.config.sprite, this.unitLayer);
         this.spiritSprites.set(key, view);
       }
       const p = this.toLocal(s.pos.x, s.pos.y);
-      view.node.setPosition(p.x, p.y + 30);
+      view.node.setPosition(p.x, p.y + 10);
       view.node.active = true;
       const col = ELEMENTS[s.element];
       drawCircle(fxg, p.x, p.y, 30, hexColor(col.color, 70));
