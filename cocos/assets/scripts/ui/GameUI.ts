@@ -406,14 +406,14 @@ export class GameUI {
   private buildCards(): void {
     const bar = new Node('CardBar');
     this.cardBar = bar;
-    ensureTransform(bar, this.mapW, 200);
-    bar.setPosition(0, -this.mapH / 2 + 110);
+    ensureTransform(bar, this.mapW, 300);
+    bar.setPosition(0, -this.mapH / 2 + 160);
     this.uiLayer.addChild(bar);
     bar.active = false;
     const n = SPIRIT_ORDER.length;
-    const cw = 150;
-    const ch = 210;
-    const gap = 12;
+    const cw = 186;
+    const ch = 268;
+    const gap = 14;
     const total = n * cw + (n - 1) * gap;
     let x0 = -total / 2 + cw / 2;
     for (let i = 0; i < n; i++) {
@@ -424,13 +424,13 @@ export class GameUI {
       card.setPosition(x0, 0);
       x0 += cw + gap;
       bar.addChild(card);
-      // 与 Godot 相同：底板 + 立绘 + 名称/费用
+      // 与 Godot 相同：底板 + 立绘 + 名称/费用（加大）
       this.makePlate(card, 'Frame', cw, ch, 'textures/ui/card_frame_' + (i % 5));
-      const port = makeSpriteNode('Portrait', 108, cfg.sprite, card);
-      port.node.setPosition(0, 28);
+      const port = makeSpriteNode('Portrait', 150, cfg.sprite, card);
+      port.node.setPosition(0, 36);
       this.cardPortraits.set(id, port.sprite);
-      this.makeLabel(card, cfg.name, 34, hexColor('#FAF3E4'), cw, 44).node.setPosition(0, -48);
-      this.makeLabel(card, String(cfg.cost), 32, hexColor('#D4A84B'), cw, 40).node.setPosition(0, -78);
+      this.makeLabel(card, cfg.name, 40, hexColor('#FAF3E4'), cw, 52).node.setPosition(0, -58);
+      this.makeLabel(card, String(cfg.cost), 36, hexColor('#D4A84B'), cw, 46).node.setPosition(0, -100);
       card.addComponent(Button);
       const pick = () => this.battle.selectCard(id);
       card.on(Button.EventType.CLICK, pick);
@@ -442,7 +442,7 @@ export class GameUI {
   private buildPanels(): void {
     // 塔位操作（panel_dialog，与 Godot SlotPanel 一致）
     this.slotPanel = this.makePlate(this.uiLayer, 'SlotPanel', 980, 320, 'textures/ui/panel_dialog');
-    this.slotPanel.setPosition(0, -this.mapH / 2 + 420);
+    this.slotPanel.setPosition(0, -this.mapH / 2 + 520);
     this.slotPanel.active = false;
     this.slotTitle = this.makeLabel(this.slotPanel, '', 48, hexColor('#FAF3E4'), 940, 64);
     this.slotTitle.node.setPosition(0, 100);
