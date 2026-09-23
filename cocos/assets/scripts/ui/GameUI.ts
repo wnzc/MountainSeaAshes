@@ -172,10 +172,10 @@ export class GameUI {
     passHits(art);
     passHits(shade);
 
-    this.makeLabel(title, '山海余烬', 72, hexColor('#F3EFE4'), 800, 90).node.setPosition(0, 320);
-    this.makeLabel(title, 'SHANHAI EMBERS', 18, hexColor('#C8C0B0'), 500, 30).node.setPosition(0, 250);
-    this.makeLabel(title, '淡墨山海 · 绚烂五灵', 28, hexColor('#E0B85C'), 700, 40).node.setPosition(0, 160);
-    this.makeLabel(title, '镜水涧 Demo · 放置灵兽，构筑元素连锁', 22, hexColor('#D8D0C0'), 800, 36).node.setPosition(0, 100);
+    this.makeLabel(title, '山海余烬', 96, hexColor('#F3EFE4'), 900, 120).node.setPosition(0, 320);
+    this.makeLabel(title, 'SHANHAI EMBERS', 26, hexColor('#C8C0B0'), 600, 40).node.setPosition(0, 250);
+    this.makeLabel(title, '淡墨山海 · 绚烂五灵', 40, hexColor('#E0B85C'), 800, 56).node.setPosition(0, 160);
+    this.makeLabel(title, '镜水涧 Demo · 放置灵兽，构筑元素连锁', 32, hexColor('#D8D0C0'), 960, 50).node.setPosition(0, 100);
 
     const startBtn = this.makeButton(title, '进入山河', 420, 120, () => {
       this.enterBattle();
@@ -186,7 +186,7 @@ export class GameUI {
       this.showToast('设置（Demo 占位）');
     }, 'textures/ui/btn_settings', 1).node.setPosition(0, -240);
 
-    this.makeLabel(title, 'SHANHAI EMBERS · Cocos Demo', 16, hexColor('#FFFFFF66'), 700, 28).node.setPosition(0, -this.mapH / 2 + 50);
+    this.makeLabel(title, 'SHANHAI EMBERS · Cocos Demo', 22, hexColor('#FFFFFF66'), 700, 36).node.setPosition(0, -this.mapH / 2 + 50);
 
     this.startPanel = title;
     this.startPanel.active = true;
@@ -288,7 +288,7 @@ export class GameUI {
     const lab = n.addComponent(Label);
     lab.string = text;
     lab.fontSize = size;
-    lab.lineHeight = size + 4;
+    lab.lineHeight = Math.round(size * 1.25);
     lab.color = color;
     lab.horizontalAlign = Label.HorizontalAlign.CENTER;
     lab.verticalAlign = Label.VerticalAlign.CENTER;
@@ -318,7 +318,7 @@ export class GameUI {
     h: number,
     onDown: () => void,
     platePath = 'textures/ui/btn_round',
-    fontSize = 28,
+    fontSize = 36,
   ): Button {
     const n = new Node('Btn_' + (text || 'icon'));
     ensureTransform(n, w, h);
@@ -351,15 +351,15 @@ export class GameUI {
     hud.active = false;
 
     // 信息用 panel_toast 底图（浅字+深底）
-    const wavePlate = this.makePlate(hud, 'WavePlate', 200, 64, 'textures/ui/panel_toast');
+    const wavePlate = this.makePlate(hud, 'WavePlate', 240, 84, 'textures/ui/panel_toast');
     wavePlate.setPosition(-400, 0);
-    this.hudWave = this.makeLabel(wavePlate, '1/8', 32, hexColor('#FAF3E4'), 180, 56);
-    const hpPlate = this.makePlate(hud, 'HpPlate', 180, 64, 'textures/ui/panel_toast');
+    this.hudWave = this.makeLabel(wavePlate, '1/8', 44, hexColor('#FAF3E4'), 220, 72);
+    const hpPlate = this.makePlate(hud, 'HpPlate', 220, 84, 'textures/ui/panel_toast');
     hpPlate.setPosition(-180, 0);
-    this.hudHp = this.makeLabel(hpPlate, '❤ 20', 32, hexColor('#FAF3E4'), 160, 56);
-    const goldPlate = this.makePlate(hud, 'GoldPlate', 200, 64, 'textures/ui/panel_toast');
+    this.hudHp = this.makeLabel(hpPlate, '❤ 20', 44, hexColor('#FAF3E4'), 200, 72);
+    const goldPlate = this.makePlate(hud, 'GoldPlate', 240, 84, 'textures/ui/panel_toast');
     goldPlate.setPosition(20, 0);
-    this.hudGold = this.makeLabel(goldPlate, '◉ 320', 32, hexColor('#FAF3E4'), 180, 56);
+    this.hudGold = this.makeLabel(goldPlate, '◉ 320', 44, hexColor('#FAF3E4'), 220, 72);
 
     // 右上角更大图标钮（与 Godot 一致）
     const soundBtn = this.makeButton(hud, '', 120, 120, () => {}, 'textures/ui/btn_sound', 1);
@@ -368,7 +368,7 @@ export class GameUI {
       this.battle.speed = this.battle.speed === 1 ? 2 : 1;
       const lab = speedBtn.node.getComponentInChildren(Label);
       if (lab) lab.string = this.battle.speed === 1 ? '×1' : '×2';
-    }, 'textures/ui/btn_speed', 26);
+    }, 'textures/ui/btn_speed', 34);
     speedBtn.node.setPosition(370, 0);
     const pauseBtn = this.makeButton(hud, '', 120, 120, () => {
       this.battle.paused = true;
@@ -382,20 +382,20 @@ export class GameUI {
     this.bossBar.setPosition(0, this.mapH / 2 - 160);
     this.bossBar.active = false;
     this.uiLayer.addChild(this.bossBar);
-    this.makeLabel(this.bossBar, '蚀山君', 22, hexColor('#C8C8C8'), 200, 28).node.setPosition(0, 28);
+    this.makeLabel(this.bossBar, '蚀山君', 32, hexColor('#C8C8C8'), 240, 40).node.setPosition(0, 28);
     const fillNode = new Node('Fill');
     ensureTransform(fillNode, 700, 18);
     this.bossBar.addChild(fillNode);
     this.bossFill = fillNode.addComponent(Graphics);
 
-    this.chainBanner = this.makeLabel(this.uiLayer, '', 40, hexColor('#FFD27A'), 800, 80);
+    this.chainBanner = this.makeLabel(this.uiLayer, '', 56, hexColor('#FFD27A'), 960, 100);
     this.chainBanner.node.setPosition(0, 120);
     this.chainBanner.node.active = false;
 
-    const toastPlate = this.makePlate(this.uiLayer, 'ToastPlate', 640, 72, 'textures/ui/panel_toast');
+    const toastPlate = this.makePlate(this.uiLayer, 'ToastPlate', 780, 96, 'textures/ui/panel_toast');
     toastPlate.setPosition(0, this.mapH / 2 - 230);
     toastPlate.active = false;
-    this.toast = this.makeLabel(toastPlate, '', 28, hexColor('#FAF3E4'), 600, 56);
+    this.toast = this.makeLabel(toastPlate, '', 36, hexColor('#FAF3E4'), 720, 72);
     this.toast.node.name = 'ToastText';
     // 保持引用兼容
     (this as any)._toastPlate = toastPlate;
@@ -411,8 +411,8 @@ export class GameUI {
     this.uiLayer.addChild(bar);
     bar.active = false;
     const n = SPIRIT_ORDER.length;
-    const cw = 136;
-    const ch = 188;
+    const cw = 150;
+    const ch = 210;
     const gap = 12;
     const total = n * cw + (n - 1) * gap;
     let x0 = -total / 2 + cw / 2;
@@ -429,8 +429,8 @@ export class GameUI {
       const port = makeSpriteNode('Portrait', 108, cfg.sprite, card);
       port.node.setPosition(0, 28);
       this.cardPortraits.set(id, port.sprite);
-      this.makeLabel(card, cfg.name, 26, hexColor('#FAF3E4'), cw, 36).node.setPosition(0, -48);
-      this.makeLabel(card, String(cfg.cost), 24, hexColor('#D4A84B'), cw, 32).node.setPosition(0, -78);
+      this.makeLabel(card, cfg.name, 34, hexColor('#FAF3E4'), cw, 44).node.setPosition(0, -48);
+      this.makeLabel(card, String(cfg.cost), 32, hexColor('#D4A84B'), cw, 40).node.setPosition(0, -78);
       card.addComponent(Button);
       const pick = () => this.battle.selectCard(id);
       card.on(Button.EventType.CLICK, pick);
@@ -444,9 +444,9 @@ export class GameUI {
     this.slotPanel = this.makePlate(this.uiLayer, 'SlotPanel', 980, 320, 'textures/ui/panel_dialog');
     this.slotPanel.setPosition(0, -this.mapH / 2 + 420);
     this.slotPanel.active = false;
-    this.slotTitle = this.makeLabel(this.slotPanel, '', 36, hexColor('#FAF3E4'), 900, 50);
+    this.slotTitle = this.makeLabel(this.slotPanel, '', 48, hexColor('#FAF3E4'), 940, 64);
     this.slotTitle.node.setPosition(0, 100);
-    this.slotMeta = this.makeLabel(this.slotPanel, '', 24, hexColor('#D8D0B8'), 900, 90);
+    this.slotMeta = this.makeLabel(this.slotPanel, '', 32, hexColor('#D8D0B8'), 940, 110);
     this.slotMeta.node.setPosition(0, 24);
     this.btnUpgrade = this.makeButton(this.slotPanel, '升级', 380, 80, () => {
       if (this.battle.selectedSlot) {
@@ -454,7 +454,7 @@ export class GameUI {
         this.showSlotPanel(this.battle.selectedSlot);
         this.refreshCards();
       }
-    }, 'textures/ui/btn_upgrade', 28);
+    }, 'textures/ui/btn_upgrade', 36);
     this.btnUpgrade.node.setPosition(-210, -100);
     this.btnSell = this.makeButton(this.slotPanel, '撤回', 380, 80, () => {
       if (this.battle.selectedSlot) {
@@ -463,7 +463,7 @@ export class GameUI {
         this.battle.selectSlot(null);
         this.refreshCards();
       }
-    }, 'textures/ui/btn_sell', 28);
+    }, 'textures/ui/btn_sell', 36);
     this.btnSell.node.setPosition(210, -100);
 
     // 暂停（panel_tall）
@@ -471,27 +471,27 @@ export class GameUI {
     this.makeButton(this.pausePanel, '继续', 360, 88, () => {
       this.battle.paused = false;
       this.pausePanel.active = false;
-    }, 'textures/ui/btn_cta', 28).node.setPosition(0, -40);
+    }, 'textures/ui/btn_cta', 36).node.setPosition(0, -40);
     this.makeButton(this.pausePanel, '重新开始', 360, 88, () => {
       this.battle.paused = false;
       this.pausePanel.active = false;
       this.battle.start();
-    }, 'textures/ui/btn_retry', 28).node.setPosition(0, -150);
+    }, 'textures/ui/btn_retry', 36).node.setPosition(0, -150);
     this.pausePanel.active = false;
 
     // 结算（panel_tall）
     this.resultPanel = this.makeOverlay('山河复色', 'textures/ui/panel_tall');
     this.resultTitle = this.resultPanel.getChildByName('Title')!.getComponent(Label)!;
-    this.resultStats = this.makeLabel(this.resultPanel, '', 24, hexColor('#D8D0B8'), 700, 50);
+    this.resultStats = this.makeLabel(this.resultPanel, '', 32, hexColor('#D8D0B8'), 800, 64);
     this.resultStats.node.setPosition(0, 40);
     this.makeButton(this.resultPanel, '再来一局', 360, 88, () => {
       this.resultPanel.active = false;
       this.battle.start();
-    }, 'textures/ui/btn_retry', 28).node.setPosition(0, -60);
+    }, 'textures/ui/btn_retry', 36).node.setPosition(0, -60);
     this.makeButton(this.resultPanel, '回到封面', 360, 88, () => {
       this.resultPanel.active = false;
       this.showTitle();
-    }, 'textures/ui/btn_home', 28).node.setPosition(0, -170);
+    }, 'textures/ui/btn_home', 36).node.setPosition(0, -170);
     this.resultPanel.active = false;
   }
 
@@ -500,7 +500,7 @@ export class GameUI {
     ensureTransform(panel, 820, 560);
     this.uiLayer.addChild(panel);
     this.makePlate(panel, 'Plate', 820, 560, platePath);
-    const t = this.makeLabel(panel, title, 48, hexColor('#F3EFE4'), 700, 70);
+    const t = this.makeLabel(panel, title, 64, hexColor('#F3EFE4'), 800, 90);
     t.node.name = 'Title';
     t.node.setPosition(0, 180);
     return panel;
@@ -528,7 +528,7 @@ export class GameUI {
       const name = CHAIN_NAMES[level] || `×${level} 连锁`;
       this.chainBanner.string = `×${level} ${name}`;
       this.chainBanner.node.active = true;
-      this.chainBanner.fontSize = level >= 4 ? 52 : 40;
+      this.chainBanner.fontSize = level >= 4 ? 72 : 56;
       this.chainBanner.color = level >= 4 ? hexColor('#FF6B4A') : hexColor('#FFD27A');
       this.chainBannerLife = level >= 4 ? 1.8 : 1.2;
     });
