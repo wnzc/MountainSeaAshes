@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c8k2m4n6p8r0"
-path="res://.godot/imported/mirror_stream_bg_v2.png-e7a45eba9459f608e56e92d4fa408d92.ctex"
+uid="uid://lc0a5oxqfhno"
+path="res://.godot/imported/map_bg_921.png-9839f231b47261e70e3f69b27bfe283e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/maps/mirror_stream_bg_v2.png"
-dest_files=["res://.godot/imported/mirror_stream_bg_v2.png-e7a45eba9459f608e56e92d4fa408d92.ctex"]
+source_file="res://assets/maps/map_bg_921.png"
+dest_files=["res://.godot/imported/map_bg_921.png-9839f231b47261e70e3f69b27bfe283e.ctex"]
 
 [params]
 
