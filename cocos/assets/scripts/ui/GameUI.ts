@@ -584,13 +584,18 @@ export class GameUI {
       const card = this.cardNodes[i];
       if (!card) return;
       const afford = this.battle.canAfford(id);
-      card.setScale(afford ? 1 : 0.94, afford ? 1 : 0.94, 1);
-      const g = card.getComponent(Graphics)!;
-      g.clear();
-      const cw = 168;
       const sel = this.battle.selectedCard === id;
-      drawRect(g, -cw / 2, -100, cw, 200, sel ? new Color(70, 58, 28, 250) : new Color(28, 34, 28, 240));
-      drawRect(g, -cw / 2 + 4, -96, cw - 8, 192, new Color(40, 48, 40, afford ? 255 : 140));
+      // 卡面是贴图，不再用 Graphics.clear()
+      const sc = sel ? 1.06 : afford ? 1 : 0.92;
+      card.setScale(sc, sc, 1);
+      const sp = card.getComponentInChildren(Sprite);
+      if (sp) {
+        sp.color = sel
+          ? new Color(255, 235, 180, 255)
+          : afford
+            ? new Color(255, 255, 255, 255)
+            : new Color(140, 140, 140, 200);
+      }
     });
   }
 
