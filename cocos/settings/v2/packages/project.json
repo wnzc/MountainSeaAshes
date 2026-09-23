@@ -1,0 +1,13 @@
+{
+  "general": {
+    "designResolution": {
+      "width": 1080,
+      "height": 2520,
+      "fitWidth": true,
+      "fitHeight": true
+    }
+  },
+  "layer": [
+    { "name": "canvas", "value": 1 }
+  ]
+}

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>山海余烬 · 镜水涧 9:21</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #1a2220; display: flex; align-items: center; justify-content: center; font-family: "PingFang SC", sans-serif; }
+    #frame {
+      position: relative;
+      width: min(100vw, calc(100vh * 9 / 21));
+      height: min(100vh, calc(100vw * 21 / 9));
+      max-width: 432px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,.45);
+    }
+    canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+    #ui { position: absolute; inset: 0; pointer-events: none; }
+    #hud {
+      position: absolute; top: 10px; left: 10px; right: 10px;
+      display: flex; gap: 8px; pointer-events: none;
+    }
+    .pill {
+      pointer-events: auto;
+      background: rgba(18,24,20,.82); border: 1px solid rgba(212,168,75,.4);
+      color: #faf3e4; border-radius: 999px; padding: 10px 14px;
+      font-size: 15px; font-weight: 700;
+    }
+    .hud-btn {
+      pointer-events: auto;
+      width: 56px; height: 56px; border-radius: 16px;
+      border: 1.5px solid rgba(212,168,75,.5);
+      background: linear-gradient(180deg, #303630, #181c18);
+      color: #faf3e4; font-weight: 800; font-size: 16px; cursor: pointer;
+    }
+    .hud-btn:active { transform: scale(.92); }
+    #toast {
+      position: absolute; top: 88px; left: 50%; transform: translateX(-50%);
+      background: rgba(18,24,20,.85); border: 1px solid rgba(212,168,75,.35);
+      color: #faf3e4; padding: 12px 20px; border-radius: 999px;
+      font-size: 16px; font-weight: 600; pointer-events: none;
+    }
+    #cards {
+      position: absolute; left: 8px; right: 8px; bottom: 10px;
+      display: flex; justify-content: center; gap: 6px;
+    }
+    .card {
+      pointer-events: auto;
+      width: 76px; height: 110px; border-radius: 14px;
+      border: 2px solid rgba(212,168,75,.55);
+      background: linear-gradient(180deg, #242c24, #121812);
+      color: #faf3e4; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 2px;
+      font-size: 15px; font-weight: 800; cursor: pointer;
+    }
+    .card .cost { color: #d4a84b; font-size: 14px; }
+    .card.sel { border-color: #ffd27a; transform: translateY(-4px); }
+    .card:active { transform: scale(.94); }
+  </style>
+</head>
+<body>
+  <div id="frame">
+    <canvas id="game" width="1080" height="2520"></canvas>
+    <div id="ui">
+      <div id="hud">
+        <div class="pill" id="wave">1/8</div>
+        <div class="pill" id="hp">❤ 20</div>
+        <div class="pill" id="gold">◉ 320</div>
+        <div style="flex:1"></div>
+        <button class="hud-btn" id="speed">×1</button>
+        <button class="hud-btn" id="pause">Ⅱ</button>
+      </div>
+      <div id="toast">放置灵兽，守住灵种！</div>
+      <div id="cards"></div>
+    </div>
+  </div>
+  <script type="module">
+    import { BattleCore, DESIGN, SPIRITS, SPIRIT_ORDER, ELEMENT_META, MAP, smoothPath, pointOnPath } from './js-core.js';
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const core = new BattleCore();
+    let speed = 1, paused = false;
+
+    // cards
+    const cards = document.getElementById('cards');
+    SPIRIT_ORDER.forEach(id => {
+      const cfg = SPIRITS[id];
+      const b = document.createElement('div');
+      b.className = 'card';
+      b.innerHTML = `<div>${cfg.name}</div><div class="cost">${cfg.cost}</div>`;
+      b.onclick = () => {
+        core.selectedCard = core.selectedCard === id ? '' : id;
+        [...cards.children].forEach((c, i) => c.classList.toggle('sel', SPIRIT_ORDER[i] === core.selectedCard));
+      };
+      cards.appendChild(b);
+    });
+    document.getElementById('speed').onclick = () => {
+      speed = speed === 1 ? 2 : 1;
+      document.getElementById('speed').textContent = '×' + speed;
+    };
+    document.getElementById('pause').onclick = () => { paused = !paused; };
+
+    canvas.addEventListener('pointerdown', (ev) => {
+      const r = canvas.getBoundingClientRect();
+      const x = ((ev.clientX - r.left) / r.width) * DESIGN.width;
+      const y = ((ev.clientY - r.top) / r.height) * DESIGN.height;
+      for (const id of Object.keys(core.slots)) {
+        const s = core.slots[id];
+        if (Math.hypot(x - s.pos.x, y - s.pos.y) < 56) {
+          if (s.spirit) core.selectedSlot = id;
+          else if (core.selectedCard) core.placeSpirit(id, core.selectedCard);
+          else core.selectedSlot = id;
+          return;
+        }
+      }
+    });
+
+    function drawPath() {
+      const pts = core.path;
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(35,28,18,.4)'; ctx.lineWidth = 100;
+      ctx.beginPath(); pts.forEach((p,i)=> i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.stroke();
+      ctx.strokeStyle = '#c4b49a'; ctx.lineWidth = 74; ctx.stroke();
+      ctx.strokeStyle = 'rgba(230,215,180,.25)'; ctx.lineWidth = 40; ctx.stroke();
+    }
+
+    function drawSlots() {
+      for (const id of Object.keys(core.slots)) {
+        const s = core.slots[id];
+        if (s.spirit) continue;
+        ctx.fillStyle = 'rgba(212,168,75,.75)';
+        ctx.beginPath(); ctx.ellipse(s.pos.x, s.pos.y + 10, 40, 18, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.25)';
+        ctx.beginPath(); ctx.ellipse(s.pos.x, s.pos.y + 10, 28, 10, 0, 0, Math.PI*2); ctx.fill();
+      }
+    }
+
+    function drawSpirits() {
+      for (const s of core.spirits) {
+        const col = ELEMENT_META[s.element].color;
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.ellipse(s.pos.x, s.pos.y - 20, 28, 24, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(s.pos.x, s.pos.y - 48, 18, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(s.pos.x-5, s.pos.y-50, 3, 0, Math.PI*2); ctx.arc(s.pos.x+5, s.pos.y-50, 3, 0, Math.PI*2); ctx.fill();
+      }
+    }
+
+    function drawEnemies() {
+      for (const e of core.enemies) {
+        ctx.fillStyle = e.config.tag === 'boss' ? '#0a0a0a' : '#1a1a1a';
+        ctx.beginPath(); ctx.ellipse(e.pos.x, e.pos.y, e.radius, e.radius * 0.9, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#c23b2e';
+        ctx.beginPath(); ctx.arc(e.pos.x-5, e.pos.y-2, 3, 0, Math.PI*2); ctx.arc(e.pos.x+5, e.pos.y-2, 3, 0, Math.PI*2); ctx.fill();
+        if (e.hp < e.maxHp) {
+          ctx.fillStyle = 'rgba(0,0,0,.45)';
+          ctx.fillRect(e.pos.x - e.radius, e.pos.y - e.radius - 12, e.radius*2, 5);
+          ctx.fillStyle = '#7CB87C';
+          ctx.fillRect(e.pos.x - e.radius, e.pos.y - e.radius - 12, e.radius*2*(e.hp/e.maxHp), 5);
+        }
+      }
+    }
+
+    function drawProjectiles() {
+      for (const p of core.projectiles) {
+        ctx.fillStyle = ELEMENT_META[p.element].color;
+        ctx.beginPath(); ctx.arc(p.pos.x, p.pos.y, 9, 0, Math.PI*2); ctx.fill();
+      }
+    }
+
+    function drawZones() {
+      for (const z of core.zones) {
+        ctx.fillStyle = z.type === 'FIRE_FIELD' ? 'rgba(232,93,58,.28)' : z.type === 'ICE' ? 'rgba(168,212,232,.35)' : 'rgba(59,167,196,.22)';
+        ctx.beginPath(); ctx.ellipse(z.pos.x, z.pos.y, z.size.x/2, z.size.y/2, 0, 0, Math.PI*2); ctx.fill();
+      }
+    }
+
+    let last = performance.now();
+    function loop(t) {
+      const dt = Math.min(0.05, (t - last) / 1000) * speed;
+      last = t;
+      if (!paused && core.state === 'playing') core.update(dt);
+      ctx.clearRect(0, 0, DESIGN.width, DESIGN.height);
+      const g = ctx.createLinearGradient(0, 0, 0, DESIGN.height);
+      g.addColorStop(0, '#c5d0c4'); g.addColorStop(1, '#8a9a86');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, DESIGN.width, DESIGN.height);
+      drawPath(); drawZones(); drawSlots(); drawSpirits(); drawEnemies(); drawProjectiles();
+      // base
+      ctx.fillStyle = '#F0C060';
+      ctx.beginPath(); ctx.ellipse(MAP.base.x, MAP.base.y, 22, 28, 0, 0, Math.PI*2); ctx.fill();
+      document.getElementById('wave').textContent = Math.min(core.waveIndex + 1, 8) + '/8';
+      document.getElementById('hp').textContent = '❤ ' + core.baseHp;
+      document.getElementById('gold').textContent = '◉ ' + core.gold;
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

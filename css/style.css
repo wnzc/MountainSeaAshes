@@ -45,9 +45,9 @@ body {
 
 #frame {
   position: relative;
-  width: min(100vw, calc(100vh * 9 / 16));
-  height: min(100vh, calc(100vw * 16 / 9));
-  max-width: 540px;
+  width: min(100vw, calc(100vh * 9 / 21));
+  height: min(100vh, calc(100vw * 21 / 9));
+  max-width: 432px;
   background: #2a3330;
   border-radius: 18px;
   overflow: hidden;

@@ -1,0 +1,9 @@
+{
+  "extends": "./temp/tsconfig.cocos.json",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2015",
+    "module": "ES2015",
+    "types": ["./temp/declarations/cc.d.ts"]
+  }
+}

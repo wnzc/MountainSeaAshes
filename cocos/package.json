@@ -1,0 +1,13 @@
+{
+  "name": "shanhai-embers-jinshui",
+  "uuid": "8f3a2c1e-9b4d-4e6a-8c2f-1a5b7d9e0f3c",
+  "version": "3.8.8",
+  "creator": {
+    "version": "3.8.8"
+  },
+  "description": "山海余烬 · 镜水涧 — Cocos Creator 移动端 Demo（9:21）",
+  "type": "3d",
+  "scripts": {
+    "test": "echo \"open in Cocos Creator 3.8+\""
+  }
+}
