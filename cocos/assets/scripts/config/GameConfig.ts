@@ -224,37 +224,38 @@ export interface WaterZoneDef {
   h: number;
 }
 
-/** 镜水涧 1080×2700 */
+/** 镜水涧 1080×2520（9:21，与 Godot 一致） */
 export const MAP = {
   id: 'map.mirror_stream',
   name: '镜水涧',
   baseHp: 20,
   startingGold: 320,
   width: 1080,
-  height: 2700,
+  height: 2520,
   path: [
-    { x: 720, y: 295 }, { x: 720, y: 394 }, { x: 560, y: 478 }, { x: 400, y: 562 },
-    { x: 340, y: 703 }, { x: 380, y: 844 }, { x: 520, y: 956 }, { x: 680, y: 1041 },
-    { x: 780, y: 1153 }, { x: 760, y: 1294 }, { x: 640, y: 1406 }, { x: 500, y: 1519 },
-    { x: 400, y: 1631 }, { x: 420, y: 1772 }, { x: 520, y: 1884 }, { x: 540, y: 2025 },
+    { x: 720, y: 220 }, { x: 740, y: 320 }, { x: 620, y: 420 }, { x: 480, y: 520 },
+    { x: 360, y: 640 }, { x: 340, y: 780 }, { x: 420, y: 920 }, { x: 560, y: 1060 },
+    { x: 700, y: 1200 }, { x: 760, y: 1360 }, { x: 720, y: 1520 }, { x: 600, y: 1680 },
+    { x: 480, y: 1840 }, { x: 420, y: 2000 }, { x: 480, y: 2160 }, { x: 540, y: 2320 },
+    { x: 540, y: 2400 },
   ] as Vec2[],
-  base: { x: 540, y: 2081 } as Vec2,
-  entry: { x: 720, y: 295 } as Vec2,
+  base: { x: 540, y: 2440 } as Vec2,
+  entry: { x: 720, y: 220 } as Vec2,
   slots: [
-    { id: 'S1', x: 480, y: 422, neighborIds: ['S2', 'S3'] },
-    { id: 'S2', x: 830, y: 394, neighborIds: ['S1', 'S4'] },
-    { id: 'S3', x: 250, y: 703, neighborIds: ['S1', 'S5'] },
-    { id: 'S4', x: 520, y: 788, neighborIds: ['S2', 'S5', 'S6'] },
-    { id: 'S5', x: 560, y: 1125, neighborIds: ['S3', 'S4', 'S6', 'S7'] },
-    { id: 'S6', x: 880, y: 1209, neighborIds: ['S4', 'S5', 'S8'] },
-    { id: 'S7', x: 380, y: 1462, neighborIds: ['S5', 'S9'] },
-    { id: 'S8', x: 760, y: 1519, neighborIds: ['S6', 'S10'] },
-    { id: 'S9', x: 300, y: 1772, neighborIds: ['S7', 'S10'] },
-    { id: 'S10', x: 680, y: 1884, neighborIds: ['S8', 'S9'] },
+    { id: 'S1', x: 480, y: 340, neighborIds: ['S2', 'S3'] },
+    { id: 'S2', x: 880, y: 360, neighborIds: ['S1', 'S4'] },
+    { id: 'S3', x: 240, y: 700, neighborIds: ['S1', 'S5'] },
+    { id: 'S4', x: 700, y: 760, neighborIds: ['S2', 'S5', 'S6'] },
+    { id: 'S5', x: 280, y: 1160, neighborIds: ['S3', 'S4', 'S6', 'S7'] },
+    { id: 'S6', x: 860, y: 1240, neighborIds: ['S4', 'S5', 'S8'] },
+    { id: 'S7', x: 260, y: 1640, neighborIds: ['S5', 'S9'] },
+    { id: 'S8', x: 860, y: 1700, neighborIds: ['S6', 'S10'] },
+    { id: 'S9', x: 300, y: 2060, neighborIds: ['S7', 'S10'] },
+    { id: 'S10', x: 760, y: 2120, neighborIds: ['S8', 'S9'] },
   ] as SlotDef[],
   waterZones: [
-    { id: 'w1', x: 370, y: 661, w: 300, h: 112 },
-    { id: 'w2', x: 560, y: 1434, w: 260, h: 141 },
+    { id: 'w1', x: 400, y: 700, w: 280, h: 90 },
+    { id: 'w2', x: 640, y: 1780, w: 240, h: 100 },
   ] as WaterZoneDef[],
   background: 'textures/maps/mirror_stream_bg_v2',
 };
