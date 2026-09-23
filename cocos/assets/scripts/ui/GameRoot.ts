@@ -213,6 +213,11 @@ export class GameRoot extends Component {
     const now = Date.now();
     if (now - this.lastPointer < 180) return;
     this.lastPointer = now;
+    // 若仍在封面且点了地图区域，兜底开局，保证能进战斗
+    if (this.battle.state === 'ready') {
+      this.battle.start();
+      if (this.ui) this.ui.enterBattlePublic?.();
+    }
     const m = this.screenToMap(x, y);
     this.battle.handlePointer(m.x, m.y);
   }

@@ -196,6 +196,10 @@ export class GameUI {
     this.startPanel.active = true;
   }
 
+  enterBattlePublic(): void {
+    this.enterBattle();
+  }
+
   private enterBattle(): void {
     if (this.startPanel) this.startPanel.active = false;
     if (this.hudNode) this.hudNode.active = true;
