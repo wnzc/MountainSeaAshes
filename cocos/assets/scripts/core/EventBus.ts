@@ -1,7 +1,7 @@
 type Handler = (...args: any[]) => void;
 
 /** 全局事件总线 — 只广播事实 */
-class EventBus {
+export class EventBus {
   private map = new Map<string, Set<Handler>>();
 
   on(name: string, fn: Handler): () => void {
