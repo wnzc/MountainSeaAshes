@@ -16,10 +16,12 @@ import {
   Label,
   Color,
   Graphics,
+  Sprite,
 } from 'cc';
 import { Battle } from '../core/Battle';
 import { GameUI } from './GameUI';
-import { MAP, ELEMENTS } from '../config/GameConfig';
+import { MAP, ELEMENTS, SPIRITS, SPIRIT_ORDER, ENEMIES } from '../config/GameConfig';
+import { spriteCache, makeSpriteNode } from './SpriteCache';
 
 const { ccclass } = _decorator;
 
@@ -35,6 +37,9 @@ export class GameRoot extends Component {
   private mapH = MAP.height;
   private lastPointer = 0;
   private gizmo!: Graphics;
+  private unitSpriteLayer!: Node;
+  private spiritSprites = new Map<string, { node: Node; sprite: Sprite }>();
+  private enemySprites = new Map<number, { node: Node; sprite: Sprite }>();
   private debugTimer = 0;
 
   onLoad(): void {
@@ -61,6 +66,15 @@ export class GameRoot extends Component {
       this.node.addChild(paint);
       paint.setSiblingIndex(this.node.children.length - 1);
       this.gizmo = paint.addComponent(Graphics);
+
+      // 立绘层（在矢量底之上）
+      this.unitSpriteLayer = new Node('UnitSprites');
+      this.unitSpriteLayer.layer = Layers.Enum.UI_2D;
+      const st = this.unitSpriteLayer.addComponent(UITransform);
+      st.setContentSize(this.mapW, this.mapH);
+      this.node.addChild(this.unitSpriteLayer);
+      this.unitSpriteLayer.setSiblingIndex(this.node.children.length - 1);
+      this.preloadUnitArt();
 
       input.on(Input.EventType.TOUCH_START, this.onTouch, this);
       input.on(Input.EventType.MOUSE_DOWN, this.onMouseDown, this);
@@ -96,6 +110,57 @@ export class GameRoot extends Component {
     return { x: mx - this.mapW / 2, y: this.mapH / 2 - my };
   }
 
+  private preloadUnitArt(): void {
+    for (const id of SPIRIT_ORDER) spriteCache.load(SPIRITS[id].sprite, () => {});
+    for (const key of Object.keys(ENEMIES)) spriteCache.load(ENEMIES[key].sprite, () => {});
+  }
+
+  /** 灵兽 / 怪物立绘：贴图跟随单位；矢量仍作底影 */
+  private syncUnitSprites(): void {
+    if (!this.battle || !this.unitSpriteLayer) return;
+    const aliveSpiritKeys = new Set<string>();
+    for (const slot of this.battle.slots.values()) {
+      if (!slot.spirit) continue;
+      const key = slot.id;
+      aliveSpiritKeys.add(key);
+      let view = this.spiritSprites.get(key);
+      if (!view) {
+        view = makeSpriteNode('SpiritArt_' + key, 150, slot.spirit.config.sprite, this.unitSpriteLayer);
+        this.spiritSprites.set(key, view);
+      }
+      const p = this.toLocal(slot.x, slot.y);
+      view.node.setPosition(p.x, p.y - 8);
+      view.node.active = true;
+    }
+    for (const [key, view] of this.spiritSprites) {
+      if (!aliveSpiritKeys.has(key)) {
+        view.node.destroy();
+        this.spiritSprites.delete(key);
+      }
+    }
+
+    const aliveEnemyIds = new Set<number>();
+    for (const e of this.battle.enemies) {
+      if (!e.alive) continue;
+      aliveEnemyIds.add(e.id);
+      let view = this.enemySprites.get(e.id);
+      if (!view) {
+        const size = Math.max(72, e.config.radius * 2.8);
+        view = makeSpriteNode('EnemyArt_' + e.id, size, e.config.sprite, this.unitSpriteLayer);
+        this.enemySprites.set(e.id, view);
+      }
+      const p = this.toLocal(e.pos.x, e.pos.y);
+      view.node.setPosition(p.x, p.y);
+      view.node.active = true;
+    }
+    for (const [id, view] of this.enemySprites) {
+      if (!aliveEnemyIds.has(id)) {
+        view.node.destroy();
+        this.enemySprites.delete(id);
+      }
+    }
+  }
+
   /** 每帧强制绘制单位 — 不依赖 Sprite */
   private paintUnits(): void {
     const g = this.gizmo;
@@ -126,9 +191,9 @@ export class GameRoot extends Component {
           const col = ELEMENTS[slot.spirit.element];
           const c = this.hex(col ? col.color : '#E85D3A');
           g.fillColor = c;
-          g.circle(x, y - 10, 30);
+          g.circle(x, y - 8, 22);
           g.fill();
-          g.circle(x, y - 52, 22);
+          g.circle(x, y - 42, 16);
           g.fill();
           g.fillColor = new Color(15, 15, 15, 255);
           g.circle(x - 8, y - 56, 4);
@@ -145,7 +210,7 @@ export class GameRoot extends Component {
         if (!e.alive) continue;
         const [x, y] = this.v(e.pos);
         g.fillColor = new Color(20, 20, 20, 245);
-        g.circle(x, y, Math.max(18, e.config.radius));
+        g.circle(x, y, Math.max(14, e.config.radius * 0.75));
         g.fill();
         g.fillColor = new Color(194, 59, 46, 255);
         g.circle(x - 7, y - 3, 4);
@@ -252,6 +317,7 @@ export class GameRoot extends Component {
     }
     // 单位层永远最后画
     this.paintUnits();
+    this.syncUnitSprites();
     this.debugTimer += dt;
     if (this.debugTimer > 2) {
       this.debugTimer = 0;
