@@ -1,0 +1,134 @@
+{
+  "ver": "1.0.27",
+  "importer": "image",
+  "imported": true,
+  "uuid": "a5cf9922-753a-4bf3-a55b-081ec07246cc",
+  "files": [
+    ".json",
+    ".png"
+  ],
+  "subMetas": {
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "a5cf9922-753a-4bf3-a55b-081ec07246cc@6c48a",
+      "displayName": "spirit_red_feather",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "a5cf9922-753a-4bf3-a55b-081ec07246cc",
+        "visible": false
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f9941": {
+      "importer": "sprite-frame",
+      "uuid": "a5cf9922-753a-4bf3-a55b-081ec07246cc@f9941",
+      "displayName": "spirit_red_feather",
+      "id": "f9941",
+      "name": "spriteFrame",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": -3,
+        "trimX": 6,
+        "trimY": 6,
+        "width": 356,
+        "height": 326,
+        "rawWidth": 368,
+        "rawHeight": 332,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [
+            -178,
+            -163,
+            0,
+            178,
+            -163,
+            0,
+            -178,
+            163,
+            0,
+            178,
+            163,
+            0
+          ],
+          "indexes": [
+            0,
+            1,
+            2,
+            2,
+            1,
+            3
+          ],
+          "uv": [
+            6,
+            326,
+            362,
+            326,
+            6,
+            0,
+            362,
+            0
+          ],
+          "nuv": [
+            0.016304347826086956,
+            0,
+            0.9836956521739131,
+            0,
+            0.016304347826086956,
+            0.9819277108433735,
+            0.9836956521739131,
+            0.9819277108433735
+          ],
+          "minPos": [
+            -178,
+            -163,
+            0
+          ],
+          "maxPos": [
+            178,
+            163,
+            0
+          ]
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "a5cf9922-753a-4bf3-a55b-081ec07246cc@6c48a",
+        "atlasUuid": "",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "type": "sprite-frame",
+    "fixAlphaTransparencyArtifacts": false,
+    "hasAlpha": true,
+    "redirect": "a5cf9922-753a-4bf3-a55b-081ec07246cc@6c48a"
+  }
+}

@@ -205,7 +205,29 @@ export function initUI(game) {
   refreshCards();
 }
 
+/** 画布按 cover 铺满机框，适配 21:9 / 9:22.5 等比例 */
+function layoutCanvas(canvas) {
+  const frame = canvas.parentElement;
+  if (!frame) return;
+  const dw = canvas.width || 1080;
+  const dh = canvas.height || 2700;
+  const fr = frame.getBoundingClientRect();
+  if (fr.width < 1 || fr.height < 1) return;
+  const scale = Math.max(fr.width / dw, fr.height / dh);
+  const w = Math.ceil(dw * scale);
+  const h = Math.ceil(dh * scale);
+  canvas.style.width = `${w}px`;
+  canvas.style.height = `${h}px`;
+  canvas.style.left = '50%';
+  canvas.style.top = '50%';
+  canvas.style.transform = 'translate(-50%, -50%)';
+}
+
 export function bindInput(game, canvas) {
+  layoutCanvas(canvas);
+  window.addEventListener('resize', () => layoutCanvas(canvas));
+  window.addEventListener('orientationchange', () => setTimeout(() => layoutCanvas(canvas), 80));
+
   // 按钮点击反馈
   for (const btn of document.querySelectorAll('button')) {
     btn.addEventListener('pointerdown', () => btn.classList.add('is-press'));

@@ -29,34 +29,34 @@ script = ExtResource("1")
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 24.0
-offset_top = 20.0
+offset_top = 24.0
 offset_right = -24.0
-offset_bottom = 92.0
-theme_override_constants/separation = 12
+offset_bottom = 148.0
+theme_override_constants/separation = 16
 
 [node name="WaveLabel" type="Label" parent="UI/TopHUD"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 34
 text = "波次 1/8"
 
 [node name="HpLabel" type="Label" parent="UI/TopHUD"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 34
 text = "❤ 20"
 
 [node name="GoldLabel" type="Label" parent="UI/TopHUD"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 34
 text = "◉ 320"
 
 [node name="BtnSpeed" type="Button" parent="UI/TopHUD"]
-custom_minimum_size = Vector2(88, 64)
+custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 text = "×1"
 
 [node name="BtnPause" type="Button" parent="UI/TopHUD"]
-custom_minimum_size = Vector2(88, 64)
+custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 text = "Ⅱ"
 
@@ -107,10 +107,10 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 12.0
-offset_top = -210.0
+offset_top = -260.0
 offset_right = -12.0
-offset_bottom = -16.0
-theme_override_constants/separation = 10
+offset_bottom = -20.0
+theme_override_constants/separation = 14
 alignment = 1
 
 [node name="SlotPanel" type="PanelContainer" parent="UI"]
@@ -120,9 +120,9 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
-offset_top = -480.0
+offset_top = -560.0
 offset_right = -24.0
-offset_bottom = -220.0
+offset_bottom = -280.0
 
 [node name="VBox" type="VBoxContainer" parent="UI/SlotPanel"]
 layout_mode = 2
@@ -144,17 +144,17 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="BtnUpgrade" type="Button" parent="UI/SlotPanel/VBox/Actions"]
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 34
 text = "升级 55"
 
 [node name="BtnSell" type="Button" parent="UI/SlotPanel/VBox/Actions"]
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 34
 text = "撤回"
 
 [node name="PausePanel" type="PanelContainer" parent="UI"]
@@ -164,10 +164,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -200.0
-offset_right = 220.0
-offset_bottom = 200.0
+offset_left = -280.0
+offset_top = -280.0
+offset_right = 280.0
+offset_bottom = 280.0
 
 [node name="VBox" type="VBoxContainer" parent="UI/PausePanel"]
 layout_mode = 2
@@ -176,17 +176,17 @@ alignment = 1
 
 [node name="Title" type="Label" parent="UI/PausePanel/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 48
 text = "暂停"
 horizontal_alignment = 1
 
 [node name="BtnResume" type="Button" parent="UI/PausePanel/VBox"]
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 text = "继续"
 
 [node name="BtnRestart" type="Button" parent="UI/PausePanel/VBox"]
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 text = "重新开始"
 
@@ -197,10 +197,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -240.0
-offset_top = -220.0
-offset_right = 240.0
-offset_bottom = 220.0
+offset_left = -300.0
+offset_top = -300.0
+offset_right = 300.0
+offset_bottom = 300.0
 
 [node name="VBox" type="VBoxContainer" parent="UI/ResultPanel"]
 layout_mode = 2
@@ -209,22 +209,22 @@ alignment = 1
 
 [node name="Title" type="Label" parent="UI/ResultPanel/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 44
+theme_override_font_sizes/font_size = 52
 text = "山河复色"
 horizontal_alignment = 1
 
 [node name="Stats" type="Label" parent="UI/ResultPanel/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 28
 text = "击杀 0"
 horizontal_alignment = 1
 
 [node name="BtnRetry" type="Button" parent="UI/ResultPanel/VBox"]
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 text = "再来一局"
 
 [node name="BtnHome" type="Button" parent="UI/ResultPanel/VBox"]
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 text = "回到封面"
