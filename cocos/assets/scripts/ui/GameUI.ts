@@ -10,6 +10,7 @@ import {
   Layers,
   Vec3,
   BlockInputEvents,
+  UITransform,
 } from 'cc';
 import {
   MAP,
@@ -58,6 +59,8 @@ export class GameUI {
   private spiritSprites = new Map<string, { node: Node; sprite: Sprite }>();
   private enemySprites = new Map<number, { node: Node; sprite: Sprite }>();
   private cardPortraits = new Map<string, Sprite>();
+  private hudNode!: Node;
+  private cardBar!: Node;
 
   constructor(root: Node, battle: Battle) {
     this.root = root;
@@ -68,8 +71,10 @@ export class GameUI {
     this.buildHud();
     this.buildCards();
     this.buildPanels();
+    this.buildTitle();
     this.bindEvents();
     this.refreshCards();
+    this.showTitle();
   }
 
   private preloadArt(): void {
@@ -117,15 +122,15 @@ export class GameUI {
     ensureTransform(this.world, this.mapW, this.mapH);
     this.world.layer = Layers.Enum.UI_2D;
     this.root.addChild(this.world);
+    this.world.active = true;
     passHits(this.world);
 
     this.unitLayer = new Node('Units');
     ensureTransform(this.unitLayer, this.mapW, this.mapH);
-    this.unitLayer.layer = Layers.Enum.UI_2D;
     this.world.addChild(this.unitLayer);
     passHits(this.unitLayer);
 
-    this.fxLayer = new Node('Fx');
+    this.fxLayer = new Node('FX');
     ensureTransform(this.fxLayer, this.mapW, this.mapH);
     this.fxLayer.layer = Layers.Enum.UI_2D;
     this.world.addChild(this.fxLayer);
@@ -135,8 +140,75 @@ export class GameUI {
     ensureTransform(this.uiLayer, this.mapW, this.mapH);
     this.uiLayer.layer = Layers.Enum.UI_2D;
     this.root.addChild(this.uiLayer);
-    // UI 层本身不挡，子按钮自己可点
     passHits(this.uiLayer);
+  }
+
+  /** 全屏首页：与 Godot TitleScreen 一致 */
+  private buildTitle(): void {
+    const title = new Node('TitleScreen');
+    ensureTransform(title, this.mapW, this.mapH);
+    title.setPosition(0, 0);
+    this.uiLayer.addChild(title);
+
+    // 背景插画
+    const art = new Node('Art');
+    ensureTransform(art, this.mapW, this.mapH);
+    title.addChild(art);
+    const sp = art.addComponent(Sprite);
+    sp.sizeMode = Sprite.SizeMode.CUSTOM;
+    sp.type = Sprite.Type.SIMPLE;
+    spriteCache.load('textures/ui/title_art', (sf) => {
+      if (sf) {
+        sp.spriteFrame = sf;
+        sp.color = Color.WHITE;
+      }
+    });
+    // 半透明压暗
+    const shade = new Node('Shade');
+    ensureTransform(shade, this.mapW, this.mapH);
+    title.addChild(shade);
+    const sg = shade.addComponent(Graphics);
+    drawRect(sg, -this.mapW / 2, -this.mapH / 2, this.mapW, this.mapH, new Color(12, 18, 14, 90));
+    passHits(art);
+    passHits(shade);
+
+    this.makeLabel(title, '山海余烬', 72, hexColor('#F3EFE4'), 800, 90).node.setPosition(0, 320);
+    this.makeLabel(title, 'SHANHAI EMBERS', 18, hexColor('#C8C0B0'), 500, 30).node.setPosition(0, 250);
+    this.makeLabel(title, '淡墨山海 · 绚烂五灵', 28, hexColor('#E0B85C'), 700, 40).node.setPosition(0, 160);
+    this.makeLabel(title, '镜水涧 Demo · 放置灵兽，构筑元素连锁', 22, hexColor('#D8D0C0'), 800, 36).node.setPosition(0, 100);
+
+    const startBtn = this.makeButton(title, '进入山河', 420, 120, () => {
+      this.enterBattle();
+    }, 'textures/ui/btn_cta', 34);
+    startBtn.node.setPosition(0, -80);
+
+    this.makeButton(title, '', 120, 120, () => {
+      this.showToast('设置（Demo 占位）');
+    }, 'textures/ui/btn_settings', 1).node.setPosition(0, -240);
+
+    this.makeLabel(title, 'SHANHAI EMBERS · Cocos Demo', 16, hexColor('#FFFFFF66'), 700, 28).node.setPosition(0, -this.mapH / 2 + 50);
+
+    this.startPanel = title;
+    this.startPanel.active = true;
+  }
+
+  private enterBattle(): void {
+    if (this.startPanel) this.startPanel.active = false;
+    if (this.hudNode) this.hudNode.active = true;
+    if (this.cardBar) this.cardBar.active = true;
+    this.battle.start();
+    this.hudWave.string = '1/8';
+    this.hudHp.string = `❤ ${this.battle.baseHp}`;
+    this.hudGold.string = `◉ ${this.battle.gold}`;
+    this.refreshCards();
+    this.showToast('放置灵兽，守住灵种！');
+  }
+
+  private showTitle(): void {
+    if (this.startPanel) this.startPanel.active = true;
+    if (this.hudNode) this.hudNode.active = false;
+    if (this.cardBar) this.cardBar.active = false;
+    if (this.slotPanel) this.slotPanel.active = false;
   }
 
   /** 世界坐标（地图左上原点）→ 节点本地（中心原点） */
@@ -194,8 +266,9 @@ export class GameUI {
     const sg = slotNode.addComponent(Graphics);
     for (const s of MAP.slots) {
       const p = this.toLocal(s.x, s.y);
-      drawCircle(sg, p.x, p.y, 36, new Color(40, 50, 45, 200));
-      drawCircle(sg, p.x, p.y, 28, new Color(212, 168, 75, 60));
+      // 与 Godot 相同：塔座图，不画装饰圆
+      const base = makeSpriteNode('Base_' + s.id, 92, 'textures/ui/tower_base', slotNode);
+      base.node.setPosition(p.x, p.y);
     }
 
     // 灵种
@@ -223,12 +296,18 @@ export class GameUI {
     return lab;
   }
 
-  /** 用与 Godot 相同的底图板（九宫格拉伸） */
+  /** 用与 Godot 相同的底图板（可拉伸） */
   private makePlate(parent: Node, name: string, w: number, h: number, texPath: string): Node {
     const n = new Node(name);
-    ensureTransform(n, w, h);
+    const ut = ensureTransform(n, w, h);
     parent.addChild(n);
-    makeSpriteNode('Plate', w, texPath, n).node.getComponent(UITransform)!.setContentSize(w, h);
+    const plate = makeSpriteNode('Plate', w, texPath, n);
+    ensureTransform(plate.node, w, h);
+    plate.node.setPosition(0, 0);
+    passHits(n);
+    // 恢复本层可点（供按钮用）
+    (ut as unknown as { isHit?: unknown }).isHit = undefined;
+    delete (ut as unknown as { isHit?: unknown }).isHit;
     return n;
   }
 
@@ -241,18 +320,22 @@ export class GameUI {
     platePath = 'textures/ui/btn_round',
     fontSize = 28,
   ): Button {
-    const n = new Node('Btn_' + text);
+    const n = new Node('Btn_' + (text || 'icon'));
     ensureTransform(n, w, h);
     parent.addChild(n);
-    // 图版按钮（与 Godot StyleBoxTexture 一致）
     const plate = makeSpriteNode('Plate', w, platePath, n);
-    plate.node.getComponent(UITransform)!.setContentSize(w, h);
-    plate.node.getComponent(UITransform)!.setContentSize(w, h);
+    ensureTransform(plate.node, w, h);
     if (text) this.makeLabel(n, text, fontSize, hexColor('#FAF3E4'), w, h);
     const btn = n.addComponent(Button);
-    n.on(Button.EventType.CLICK, onDown);
-    bindClick(n, onDown);
-    // 点击回弹
+    let last = 0;
+    const fire = () => {
+      const t = Date.now();
+      if (t - last < 200) return;
+      last = t;
+      onDown();
+    };
+    n.on(Button.EventType.CLICK, fire);
+    bindClick(n, fire);
     n.on(Node.EventType.TOUCH_START, () => n.setScale(0.94, 0.94, 1));
     n.on(Node.EventType.TOUCH_END, () => n.setScale(1.02, 1.02, 1));
     n.on(Node.EventType.TOUCH_CANCEL, () => n.setScale(1, 1, 1));
@@ -261,9 +344,11 @@ export class GameUI {
 
   private buildHud(): void {
     const hud = new Node('HUD');
+    this.hudNode = hud;
     ensureTransform(hud, this.mapW, 150);
     hud.setPosition(0, this.mapH / 2 - 72);
     this.uiLayer.addChild(hud);
+    hud.active = false;
 
     // 信息用 panel_toast 底图（浅字+深底）
     const wavePlate = this.makePlate(hud, 'WavePlate', 200, 64, 'textures/ui/panel_toast');
@@ -320,9 +405,11 @@ export class GameUI {
 
   private buildCards(): void {
     const bar = new Node('CardBar');
+    this.cardBar = bar;
     ensureTransform(bar, this.mapW, 200);
     bar.setPosition(0, -this.mapH / 2 + 110);
     this.uiLayer.addChild(bar);
+    bar.active = false;
     const n = SPIRIT_ORDER.length;
     const cw = 136;
     const ch = 188;
@@ -379,23 +466,6 @@ export class GameUI {
     }, 'textures/ui/btn_sell', 28);
     this.btnSell.node.setPosition(210, -100);
 
-    // 开始：标题图 + CTA（与 Godot TitleScreen 一致）
-    this.startPanel = this.makeOverlay('山海余烬', 'textures/ui/title_art');
-    this.makeLabel(this.startPanel, '淡墨山海 · 绚烂五灵', 24, hexColor('#E0B85C'), 700, 40).node.setPosition(0, 120);
-    const startBtn = this.makeButton(this.startPanel, '进入山河', 420, 120, () => {
-      this.startPanel.active = false;
-      this.battle.start();
-      this.hudWave.string = '1/8';
-      this.hudHp.string = `❤ ${this.battle.baseHp}`;
-      this.hudGold.string = `◉ ${this.battle.gold}`;
-      this.refreshCards();
-      this.showToast('放置灵兽，守住灵种！');
-    }, 'textures/ui/btn_cta', 34);
-    startBtn.node.setPosition(0, -60);
-    this.makeButton(this.startPanel, '', 120, 120, () => {
-      // 设置占位，与 Godot 一致
-    }, 'textures/ui/btn_settings', 1).node.setPosition(0, -200);
-
     // 暂停（panel_tall）
     this.pausePanel = this.makeOverlay('暂停', 'textures/ui/panel_tall');
     this.makeButton(this.pausePanel, '继续', 360, 88, () => {
@@ -420,7 +490,7 @@ export class GameUI {
     }, 'textures/ui/btn_retry', 28).node.setPosition(0, -60);
     this.makeButton(this.resultPanel, '回到封面', 360, 88, () => {
       this.resultPanel.active = false;
-      this.startPanel.active = true;
+      this.showTitle();
     }, 'textures/ui/btn_home', 28).node.setPosition(0, -170);
     this.resultPanel.active = false;
   }
@@ -430,14 +500,9 @@ export class GameUI {
     ensureTransform(panel, 820, 560);
     this.uiLayer.addChild(panel);
     this.makePlate(panel, 'Plate', 820, 560, platePath);
-    if (title === '山海余烬') {
-      // 首页标题大字
-      this.makeLabel(panel, title, 64, hexColor('#F3EFE4'), 700, 80).node.setPosition(0, 200);
-    } else {
-      const t = this.makeLabel(panel, title, 48, hexColor('#F3EFE4'), 700, 70);
-      t.node.name = 'Title';
-      t.node.setPosition(0, 180);
-    }
+    const t = this.makeLabel(panel, title, 48, hexColor('#F3EFE4'), 700, 70);
+    t.node.name = 'Title';
+    t.node.setPosition(0, 180);
     return panel;
   }
 

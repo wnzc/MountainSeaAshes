@@ -8,6 +8,15 @@
     }
   },
   "layer": [
-    { "name": "canvas", "value": 1 }
-  ]
+    {
+      "name": "canvas",
+      "value": 1
+    }
+  ],
+  "__version__": "1.0.6",
+  "fbx": {
+    "legacyFbxImporter": {
+      "visible": true
+    }
+  }
 }

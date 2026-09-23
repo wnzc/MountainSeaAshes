@@ -156,9 +156,9 @@ export class BattleCore {
 
   applyElement(target: any, incoming: Element, duration: number) {
     const now = performance.now() / 1000;
-    const existing = (target.element >= 0 && now < target.elementUntil) ? target.element as Element : -1;
-    if (existing >= 0 && existing !== incoming) {
-      const reaction = findReaction(existing, incoming);
+    const existing: Element | -1 = (target.element >= 0 && now < target.elementUntil) ? (target.element as Element) : -1;
+    if (existing !== -1 && existing !== incoming) {
+      const reaction = findReaction(existing as Element, incoming);
       if (reaction) {
         this.executeReaction(target, reaction);
         return;
