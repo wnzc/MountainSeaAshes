@@ -135,6 +135,8 @@ export class GameUI {
     this.fxLayer.layer = Layers.Enum.UI_2D;
     this.world.addChild(this.fxLayer);
     passHits(this.fxLayer);
+    // 单位列放最上，避免被 FX 盖住
+    this.unitLayer.setSiblingIndex(this.world.children.length - 1);
 
     this.uiLayer = new Node('UI');
     ensureTransform(this.uiLayer, this.mapW, this.mapH);
@@ -179,7 +181,7 @@ export class GameUI {
 
     const startBtn = this.makeButton(title, '进入山河', 420, 120, () => {
       this.enterBattle();
-    }, 'textures/ui/btn_cta', 34);
+    }, null, 40);
     startBtn.node.setPosition(0, -80);
 
     this.makeButton(title, '', 120, 120, () => {
@@ -302,18 +304,22 @@ export class GameUI {
     return lab;
   }
 
-  /** 用与 Godot 相同的底图板（可拉伸） */
-  private makePlate(parent: Node, name: string, w: number, h: number, texPath: string): Node {
+  /** Godot 风格底板：Graphics 圆角+金边，不拉伸贴图 */
+  private makePlate(parent: Node, name: string, w: number, h: number, _texPath?: string): Node {
     const n = new Node(name);
-    const ut = ensureTransform(n, w, h);
+    ensureTransform(n, w, h);
     parent.addChild(n);
-    const plate = makeSpriteNode('Plate', w, texPath, n);
-    ensureTransform(plate.node, w, h);
-    plate.node.setPosition(0, 0);
+    const g = n.addComponent(Graphics);
+    const r = Math.min(28, h * 0.25);
+    // 外金边
+    g.fillColor = new Color(212, 168, 75, 230);
+    g.roundRect(-w / 2, -h / 2, w, h, r);
+    g.fill();
+    // 内墨底
+    g.fillColor = new Color(26, 32, 28, 245);
+    g.roundRect(-w / 2 + 4, -h / 2 + 4, w - 8, h - 8, Math.max(8, r - 4));
+    g.fill();
     passHits(n);
-    // 恢复本层可点（供按钮用）
-    (ut as unknown as { isHit?: unknown }).isHit = undefined;
-    delete (ut as unknown as { isHit?: unknown }).isHit;
     return n;
   }
 
@@ -323,24 +329,43 @@ export class GameUI {
     w: number,
     h: number,
     onDown: () => void,
-    platePath = 'textures/ui/btn_round',
+    iconPath: string | null = null,
     fontSize = 36,
   ): Button {
     const n = new Node('Btn_' + (text || 'icon'));
     ensureTransform(n, w, h);
     parent.addChild(n);
-    const plate = makeSpriteNode('Plate', w, platePath, n);
-    ensureTransform(plate.node, w, h);
-    if (text) this.makeLabel(n, text, fontSize, hexColor('#FAF3E4'), w, h);
+    // 底板用矢量，避免 logo 贴图被拉变形
+    const g = n.addComponent(Graphics);
+    const r = Math.min(20, h * 0.28);
+    g.fillColor = new Color(212, 168, 75, 220);
+    g.roundRect(-w / 2, -h / 2, w, h, r);
+    g.fill();
+    g.fillColor = new Color(70, 62, 36, 240);
+    g.roundRect(-w / 2 + 3, -h / 2 + 3, w - 6, h - 6, Math.max(8, r - 3));
+    g.fill();
+
+    // 图标在文字左侧
+    let textW = w - 24;
+    let textOffX = 0;
+    if (iconPath) {
+      const icon = makeSpriteNode('Icon', Math.min(h * 0.55, 48), iconPath, n);
+      icon.node.setPosition(-w / 2 + 36, 0);
+      textOffX = 18;
+      textW = w - 90;
+    }
+    if (text) {
+      const lab = this.makeLabel(n, text, fontSize, hexColor('#FAF3E4'), textW, h * 0.7);
+      lab.node.setPosition(textOffX, 0);
+    }
     const btn = n.addComponent(Button);
     let last = 0;
     const fire = () => {
       const t = Date.now();
-      if (t - last < 200) return;
+      if (t - last < 250) return;
       last = t;
       onDown();
     };
-    n.on(Button.EventType.CLICK, fire);
     bindClick(n, fire);
     n.on(Node.EventType.TOUCH_START, () => n.setScale(0.94, 0.94, 1));
     n.on(Node.EventType.TOUCH_END, () => n.setScale(1.02, 1.02, 1));
@@ -374,7 +399,7 @@ export class GameUI {
       this.battle.speed = this.battle.speed === 1 ? 2 : 1;
       const lab = speedBtn.node.getComponentInChildren(Label);
       if (lab) lab.string = this.battle.speed === 1 ? '×1' : '×2';
-    }, 'textures/ui/btn_speed', 34);
+    }, 'textures/ui/btn_speed', 30);
     speedBtn.node.setPosition(370, 0);
     const pauseBtn = this.makeButton(hud, '', 120, 120, () => {
       this.battle.paused = true;
@@ -466,7 +491,7 @@ export class GameUI {
         this.showSlotPanel(this.battle.selectedSlot);
         this.refreshCards();
       }
-    }, 'textures/ui/btn_upgrade', 36);
+    }, 'textures/ui/btn_upgrade', 34);
     this.btnUpgrade.node.setPosition(-210, -100);
     this.btnSell = this.makeButton(this.slotPanel, '撤回', 380, 80, () => {
       if (this.battle.selectedSlot) {
@@ -475,7 +500,7 @@ export class GameUI {
         this.battle.selectSlot(null);
         this.refreshCards();
       }
-    }, 'textures/ui/btn_sell', 36);
+    }, 'textures/ui/btn_sell', 34);
     this.btnSell.node.setPosition(210, -100);
 
     // 暂停（panel_tall）
@@ -483,12 +508,12 @@ export class GameUI {
     this.makeButton(this.pausePanel, '继续', 360, 88, () => {
       this.battle.paused = false;
       this.pausePanel.active = false;
-    }, 'textures/ui/btn_cta', 36).node.setPosition(0, -40);
+    }, null, 36).node.setPosition(0, -40);
     this.makeButton(this.pausePanel, '重新开始', 360, 88, () => {
       this.battle.paused = false;
       this.pausePanel.active = false;
       this.battle.start();
-    }, 'textures/ui/btn_cta', 36).node.setPosition(0, -150);
+    }, null, 36).node.setPosition(0, -150);
     this.pausePanel.active = false;
 
     // 结算（panel_tall）
@@ -499,11 +524,11 @@ export class GameUI {
     this.makeButton(this.resultPanel, '再来一局', 360, 88, () => {
       this.resultPanel.active = false;
       this.enterBattle();
-    }, 'textures/ui/btn_cta', 36).node.setPosition(0, -60);
+    }, null, 36).node.setPosition(0, -60);
     this.makeButton(this.resultPanel, '回到封面', 360, 88, () => {
       this.resultPanel.active = false;
       this.showTitle();
-    }, 'textures/ui/btn_cta', 36).node.setPosition(0, -170);
+    }, null, 36).node.setPosition(0, -170);
     this.resultPanel.active = false;
   }
 
@@ -613,6 +638,14 @@ export class GameUI {
 
   /** 每帧：世界表现 + 输入由 GameRoot 转发 */
   updateView(dt: number): void {
+    try {
+      this._updateView(dt);
+    } catch (err) {
+      console.error('[GameUI] updateView', err);
+    }
+  }
+
+  private _updateView(dt: number): void {
     if (this.chainBannerLife > 0) {
       this.chainBannerLife -= dt;
       if (this.chainBannerLife <= 0) this.chainBanner.node.active = false;
@@ -632,19 +665,22 @@ export class GameUI {
     this.fxLayer.addChild(fxgNode);
     const fxg = fxgNode.addComponent(Graphics);
 
-    // 灵兽立绘
+    // 灵兽立绘：严格贴塔位坐标
     for (const s of this.battle.spirits) {
       const key = s.slotId;
+      const slot = this.battle.slots.get(key);
+      const mx = slot ? slot.x : s.pos.x;
+      const my = slot ? slot.y : s.pos.y;
       let view = this.spiritSprites.get(key);
       if (!view) {
-        view = makeSpriteNode('Spirit_' + key, 160, s.config.sprite, this.unitLayer);
+        view = makeSpriteNode('Spirit_' + key, 150, s.config.sprite, this.unitLayer);
         this.spiritSprites.set(key, view);
       }
-      const p = this.toLocal(s.pos.x, s.pos.y);
-      view.node.setPosition(p.x, p.y + 10);
+      const p = this.toLocal(mx, my);
+      view.node.setPosition(p.x, p.y - 8);
       view.node.active = true;
       const col = ELEMENTS[s.element];
-      drawCircle(fxg, p.x, p.y, 30, hexColor(col.color, 70));
+      if (col) drawCircle(fxg, p.x, p.y, 34, hexColor(col.color, 60));
     }
     // 清理已撤回的灵兽
     for (const [key, view] of this.spiritSprites) {
@@ -678,18 +714,22 @@ export class GameUI {
         this.enemySprites.set(e.id, view);
       }
       const p = this.toLocal(e.pos.x, e.pos.y);
-      view.node.setPosition(p.x, p.y + 12);
+      view.node.setPosition(p.x, p.y);
       view.node.active = true;
+      // 兜底墨团，保证“有怪物”可见
+      drawCircle(fxg, p.x, p.y, e.config.radius * 0.85, new Color(24, 24, 24, 220));
       if (e.element && this.battle.time < e.elementUntil) {
         const el = ELEMENTS[e.element];
-        fxg.strokeColor = hexColor(el.color, 180);
-        fxg.lineWidth = 4;
-        fxg.circle(p.x, p.y, e.config.radius + 8);
-        fxg.stroke();
+        if (el) {
+          fxg.strokeColor = hexColor(el.color, 180);
+          fxg.lineWidth = 4;
+          fxg.circle(p.x, p.y, e.config.radius + 8);
+          fxg.stroke();
+        }
       }
       const ratio = e.hp / e.maxHp;
-      drawRect(fxg, p.x - 28, p.y + e.config.radius + 10, 56, 6, new Color(0, 0, 0, 160));
-      drawRect(fxg, p.x - 28, p.y + e.config.radius + 10, 56 * ratio, 6, new Color(200, 60, 50, 220));
+      drawRect(fxg, p.x - 32, p.y + e.config.radius + 14, 64, 8, new Color(0, 0, 0, 160));
+      drawRect(fxg, p.x - 32, p.y + e.config.radius + 14, 64 * ratio, 8, new Color(200, 60, 50, 220));
     }
     for (const [id, view] of this.enemySprites) {
       if (!aliveIds.has(id)) {
