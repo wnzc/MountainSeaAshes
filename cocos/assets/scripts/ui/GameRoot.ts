@@ -41,6 +41,8 @@ export class GameRoot extends Component {
   private spiritSprites = new Map<string, { node: Node; sprite: Sprite }>();
   private enemySprites = new Map<number, { node: Node; sprite: Sprite }>();
   private debugTimer = 0;
+  private animTime = 0;
+  private frameFx: Array<{ x: number; y: number; color?: string; type?: string }> = [];
 
   onLoad(): void {
     try {
@@ -64,17 +66,18 @@ export class GameRoot extends Component {
       const ut = paint.addComponent(UITransform);
       ut.setContentSize(this.mapW, this.mapH);
       this.node.addChild(paint);
-      paint.setSiblingIndex(this.node.children.length - 1);
       this.gizmo = paint.addComponent(Graphics);
 
-      // 立绘层（在矢量底之上）
+      // 立绘层
       this.unitSpriteLayer = new Node('UnitSprites');
       this.unitSpriteLayer.layer = Layers.Enum.UI_2D;
       const st = this.unitSpriteLayer.addComponent(UITransform);
       st.setContentSize(this.mapW, this.mapH);
       this.node.addChild(this.unitSpriteLayer);
-      this.unitSpriteLayer.setSiblingIndex(this.node.children.length - 1);
       this.preloadUnitArt();
+
+      // 单位层必须在 UI 弹窗之下
+      this.bringUnitsUnderUi();
 
       input.on(Input.EventType.TOUCH_START, this.onTouch, this);
       input.on(Input.EventType.MOUSE_DOWN, this.onMouseDown, this);
@@ -108,6 +111,21 @@ export class GameRoot extends Component {
 
   private toLocal(mx: number, my: number): { x: number; y: number } {
     return { x: mx - this.mapW / 2, y: this.mapH / 2 - my };
+  }
+
+  /** 单位绘制层放在 UI 之下，弹窗/面板永远盖住底座和立绘 */
+  private bringUnitsUnderUi(): void {
+    const uiIdx = this.node.children.findIndex((c) => c.name === 'UI');
+    const paintIdx = this.node.children.findIndex((c) => c.name === 'UnitPaint');
+    const sprIdx = this.node.children.findIndex((c) => c.name === 'UnitSprites');
+    if (uiIdx < 0) return;
+    // 目标顺序：… World, UnitPaint, UnitSprites, UI …
+    if (paintIdx >= 0) this.node.children[paintIdx].setSiblingIndex(uiIdx);
+    const uiIdx2 = this.node.children.findIndex((c) => c.name === 'UI');
+    if (sprIdx >= 0) {
+      const spr = this.node.children.find((c) => c.name === 'UnitSprites');
+      if (spr) spr.setSiblingIndex(uiIdx2);
+    }
   }
 
   private preloadUnitArt(): void {
@@ -166,67 +184,171 @@ export class GameRoot extends Component {
     const g = this.gizmo;
     if (!g) return;
     g.clear();
+    const t = this.animTime;
+    const battle = this.battle;
+    if (!battle) return;
 
-    // 路径底衬（弱）
-    if (this.battle && this.battle.path) {
-      const pts = this.battle.path;
-      if (pts.length > 1) {
-        g.strokeColor = new Color(80, 65, 45, 60);
-        g.lineWidth = 78;
-        g.moveTo(...this.v(pts[0]));
-        for (let i = 1; i < pts.length; i++) g.lineTo(...this.v(pts[i]));
+    // 路径底衬
+    const pts = battle.path;
+    if (pts.length > 1) {
+      g.strokeColor = new Color(80, 65, 45, 55);
+      g.lineWidth = 78;
+      g.moveTo(...this.v(pts[0]));
+      for (let i = 1; i < pts.length; i++) g.lineTo(...this.v(pts[i]));
+      g.stroke();
+    }
+
+    // 路口山洞（盖住道路上端毛边）
+    const entry = MAP.entry;
+    const [ex, ey] = this.v(entry);
+    g.fillColor = new Color(45, 42, 38, 255);
+    g.ellipse(ex, ey - 10, 70, 55);
+    g.fill();
+    g.fillColor = new Color(12, 12, 14, 255);
+    g.ellipse(ex, ey + 8, 42, 36);
+    g.fill();
+    g.strokeColor = new Color(90, 85, 75, 220);
+    g.lineWidth = 6;
+    g.ellipse(ex, ey - 10, 70, 55);
+    g.stroke();
+    // 洞口微光
+    g.fillColor = new Color(194, 59, 46, 50 + 30 * Math.sin(t * 3));
+    g.ellipse(ex, ey + 8, 28, 22);
+    g.fill();
+
+    // 灵种底座（道路下端）
+    const seed = MAP.base;
+    const [bx, by] = this.v(seed);
+    g.fillColor = new Color(212, 168, 75, 210);
+    g.circle(bx, by, 36);
+    g.fill();
+    g.fillColor = new Color(240, 192, 96, 255);
+    g.ellipse(bx, by - 4, 16, 22);
+    g.fill();
+    g.fillColor = new Color(255, 230, 150, 60 + 40 * Math.sin(t * 4));
+    g.circle(bx, by, 48);
+    g.fill();
+
+    // 塔位底座 + 灵兽矢量底影
+    for (const slot of battle.slots.values()) {
+      const [x, y] = this.v(slot);
+      // 底座（空位也显示，层级低于弹窗）
+      g.fillColor = new Color(212, 168, 75, slot.spirit ? 120 : 230);
+      g.circle(x, y, 44);
+      g.fill();
+      g.fillColor = new Color(255, 245, 220, 45);
+      g.circle(x, y, 30);
+      g.fill();
+      g.fillColor = new Color(40, 48, 40, 50);
+      g.circle(x, y, 14);
+      g.fill();
+      if (slot.spirit) {
+        const col = ELEMENTS[slot.spirit.element];
+        const c = this.hex(col ? col.color : '#E85D3A');
+        // 攻击前摇：轻微放大
+        const lastAtk = (slot.spirit as any).lastAtk as number | undefined;
+        const atk = lastAtk != null ? Math.max(0, 1 - (this.animTime - lastAtk) * 4) : 0;
+        const sc = 1 + atk * 0.12;
+        g.fillColor = c;
+        g.circle(x, y - 8, 20 * sc);
+        g.fill();
+        g.circle(x, y - 42, 15 * sc);
+        g.fill();
+        // 射程圈（淡）
+        g.strokeColor = new Color(c.r, c.g, c.b, 40);
+        g.lineWidth = 2;
+        g.circle(x, y, slot.spirit.range);
         g.stroke();
       }
     }
 
-    // 塔位底座
-    if (this.battle) {
-      for (const slot of this.battle.slots.values()) {
-        const [x, y] = this.v(slot);
-        g.fillColor = new Color(212, 168, 75, 200);
-        g.circle(x, y, 42);
-        g.fill();
-        // 灵兽
-        if (slot.spirit) {
-          const col = ELEMENTS[slot.spirit.element];
-          const c = this.hex(col ? col.color : '#E85D3A');
-          g.fillColor = c;
-          g.circle(x, y - 8, 22);
-          g.fill();
-          g.circle(x, y - 42, 16);
-          g.fill();
-          g.fillColor = new Color(15, 15, 15, 255);
-          g.circle(x - 8, y - 56, 4);
-          g.fill();
-          g.circle(x + 8, y - 56, 4);
-          g.fill();
-        }
+    // 怪物：行走起伏 + 状态
+    for (const e of battle.enemies) {
+      if (!e.alive) continue;
+      const [x, y0] = this.v(e.pos);
+      const walk = Math.sin(t * 8 + e.id) * 3;
+      const y = y0 + walk;
+      const now = battle.time;
+      const frozen = now < e.status.frozenUntil;
+      const slowed = !frozen && now < e.status.slowUntil;
+      const wet = now < (e as any).elementUntil && e.element === 'WATER';
+
+      // 状态环
+      if (frozen) {
+        g.strokeColor = new Color(168, 212, 232, 200);
+        g.lineWidth = 4;
+        g.circle(x, y, e.config.radius + 8);
+        g.stroke();
+      } else if (slowed) {
+        g.strokeColor = new Color(90, 160, 200, 180);
+        g.lineWidth = 3;
+        g.circle(x, y, e.config.radius + 6);
+        g.stroke();
+      } else if (wet) {
+        g.strokeColor = new Color(59, 167, 196, 140);
+        g.lineWidth = 3;
+        g.circle(x, y, e.config.radius + 5);
+        g.stroke();
       }
+
+      // 身体
+      const bodyCol = frozen
+        ? new Color(140, 170, 190, 245)
+        : slowed
+          ? new Color(40, 55, 70, 245)
+          : new Color(20, 20, 20, 245);
+      g.fillColor = bodyCol;
+      g.circle(x, y, Math.max(14, e.config.radius * 0.75));
+      g.fill();
+      g.fillColor = new Color(194, 59, 46, 255);
+      g.circle(x - 7, y - 3, 4);
+      g.fill();
+      g.circle(x + 7, y - 3, 4);
+      g.fill();
+
+      // 血条
+      const ratio = e.hp / e.maxHp;
+      g.fillColor = new Color(0, 0, 0, 160);
+      g.rect(x - 28, y + e.config.radius + 10, 56, 7);
+      g.fill();
+      g.fillColor = new Color(200, 60, 50, 230);
+      g.rect(x - 28, y + e.config.radius + 10, 56 * ratio, 7);
+      g.fill();
     }
 
-    // 怪物
-    if (this.battle) {
-      for (const e of this.battle.enemies) {
-        if (!e.alive) continue;
-        const [x, y] = this.v(e.pos);
-        g.fillColor = new Color(20, 20, 20, 245);
-        g.circle(x, y, Math.max(14, e.config.radius * 0.75));
+    // 弹道（攻击动画）
+    for (const p of battle.projectiles) {
+      const [px, py] = this.v(p.pos);
+      const el = ELEMENTS[p.element];
+      const c = this.hex(el ? el.glow || el.color : '#FFD27A');
+      g.fillColor = c;
+      g.circle(px, py, 8);
+      g.fill();
+      g.fillColor = new Color(255, 255, 255, 120);
+      g.circle(px, py, 4);
+      g.fill();
+    }
+
+    // 本帧特效（命中/连锁/升级）
+    for (const fx of this.frameFx) {
+      const [fx2, fy] = this.v(fx as { x: number; y: number });
+      const col = this.hex((fx as { color?: string }).color || '#FFD27A');
+      const ftype = (fx as any).type as string;
+      if (ftype === 'chain' || ftype === 'reaction') {
+        g.strokeColor = col;
+        g.lineWidth = 4;
+        g.circle(fx2, fy, 30);
+        g.stroke();
+        g.fillColor = new Color(col.r, col.g, col.b, 50);
+        g.circle(fx2, fy, 30);
         g.fill();
-        g.fillColor = new Color(194, 59, 46, 255);
-        g.circle(x - 7, y - 3, 4);
-        g.fill();
-        g.circle(x + 7, y - 3, 4);
-        g.fill();
-        // 血条
-        const ratio = e.hp / e.maxHp;
-        g.fillColor = new Color(0, 0, 0, 160);
-        g.rect(x - 28, y + e.config.radius + 10, 56, 7);
-        g.fill();
-        g.fillColor = new Color(200, 60, 50, 230);
-        g.rect(x - 28, y + e.config.radius + 10, 56 * ratio, 7);
+      } else {
+        g.fillColor = col;
+        g.circle(fx2, fy, 12);
         g.fill();
       }
     }
+    this.frameFx = [];
   }
 
   private v(p: { x: number; y: number }): [number, number] {
@@ -307,6 +429,7 @@ export class GameRoot extends Component {
 
   update(dt: number): void {
     if (!this.battle) return;
+    this.animTime += dt;
     try {
       if (this.battle.state === 'playing') {
         this.battle.update(dt);
@@ -315,7 +438,11 @@ export class GameRoot extends Component {
     } catch (e) {
       console.error('[GameRoot] update failed', e);
     }
-    // 单位层永远最后画
+    try {
+      this.frameFx = this.battle.drainFx() as any;
+    } catch (_) {
+      this.frameFx = [];
+    }
     this.paintUnits();
     this.syncUnitSprites();
     this.debugTimer += dt;

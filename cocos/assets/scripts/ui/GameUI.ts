@@ -284,14 +284,19 @@ export class GameUI {
     drawPath(pg, pts, new Color(196, 180, 154, 255), 74);
     drawPath(pg, pts, new Color(230, 220, 190, 50), 48);
 
-    // 水域
+    // 水域：椭圆水潭（避免方块）
     const waterNode = new Node('Water');
     ensureTransform(waterNode, this.mapW, this.mapH);
     this.world.addChild(waterNode);
     const wg = waterNode.addComponent(Graphics);
     for (const w of MAP.waterZones) {
       const p = this.toLocal(w.x, w.y);
-      drawRect(wg, p.x - w.w / 2, p.y - w.h / 2, w.w, w.h, new Color(90, 160, 180, 70));
+      wg.fillColor = new Color(90, 160, 180, 55);
+      wg.ellipse(p.x, p.y, w.w * 0.55, w.h * 0.7);
+      wg.fill();
+      wg.fillColor = new Color(140, 200, 210, 40);
+      wg.ellipse(p.x + 8, p.y + 4, w.w * 0.35, w.h * 0.4);
+      wg.fill();
     }
 
     // 塔位：底座 + 明确点击热区（全局 input 不稳时仍可放置）
