@@ -132,20 +132,27 @@ export class GameRoot extends Component {
   private decorSeed: Node | null = null;
 
   private syncMapDecor(): void {
-    if (!this.unitSpriteLayer) return;
+    if (!this.unitSpriteLayer || !this.battle) return;
     if (!this.decorCave) {
-      const c = makeSpriteNode('CaveGate', 240, 'textures/ui/cave_gate', this.unitSpriteLayer);
+      const c = makeSpriteNode('CaveGate', 320, 'textures/ui/cave_gate', this.unitSpriteLayer);
       const ep = this.toLocal(MAP.entry.x, MAP.entry.y);
-      c.node.setPosition(ep.x, ep.y + 16);
+      c.node.setPosition(ep.x, ep.y - 24);
       this.decorCave = c.node;
     }
     if (!this.decorSeed) {
-      const s = makeSpriteNode('SeedShrine', 200, 'textures/ui/seed_shrine', this.unitSpriteLayer);
+      const s = makeSpriteNode('SeedShrine', 360, 'textures/ui/seed_shrine', this.unitSpriteLayer);
       this.decorSeed = s.node;
     }
-    const sp = this.toLocal(MAP.base.x, MAP.base.y);
     const bob = Math.sin(this.animTime * 3) * 5;
-    if (this.decorSeed) this.decorSeed.setPosition(sp.x, sp.y + bob);
+    const path = this.battle.path;
+    const last = path[path.length - 1];
+    const prev = path[Math.max(0, path.length - 3)];
+    const lp = this.toLocal(last.x, last.y);
+    const pp = this.toLocal(prev.x, prev.y);
+    // 灵种台压在路尾，盖住线头
+    const cx = (lp.x + pp.x) / 2;
+    const cy = (lp.y + pp.y) / 2 + 28 + bob;
+    if (this.decorSeed) this.decorSeed.setPosition(cx, cy);
   }
 
   /** 攻击/命中特效贴图（短命） */

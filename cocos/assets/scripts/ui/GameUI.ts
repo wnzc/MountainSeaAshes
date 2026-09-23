@@ -331,6 +331,8 @@ export class GameUI {
       pg2.fillColor = new Color(40, 48, 40, 60);
       pg2.circle(0, 0, 16);
       pg2.fill();
+      const baseArt = makeSpriteNode('BaseArt_' + s.id, 124, 'textures/ui/tower_base', slotNode);
+      baseArt.node.setPosition(p.x, p.y + 8);
       passHits(pad);
 
       const hit = new Node('SlotHit_' + s.id);

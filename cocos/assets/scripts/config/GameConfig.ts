@@ -109,38 +109,38 @@ export interface EnemyConfig {
 export const ENEMIES: Record<string, EnemyConfig> = {
   'enemy.ink_blob': {
     id: 'enemy.ink_blob', name: '墨团', maxHp: 80, speed: 70, reward: 8,
-    radius: 22, tag: 'normal', sprite: 'textures/enemies/enemy_ink_blob',
+    radius: 34, tag: 'normal', sprite: 'textures/enemies/enemy_ink_blob',
   },
   'enemy.ink_hound': {
     id: 'enemy.ink_hound', name: '蚀犬', maxHp: 55, speed: 110, reward: 9,
-    radius: 18, tag: 'fast', sprite: 'textures/enemies/enemy_ink_hound',
+    radius: 28, tag: 'fast', sprite: 'textures/enemies/enemy_ink_hound',
   },
   'enemy.ink_shell': {
     id: 'enemy.ink_shell', name: '甲蚀', maxHp: 220, speed: 48, reward: 16,
-    radius: 28, tag: 'tank', sprite: 'textures/enemies/enemy_ink_shell',
+    radius: 40, tag: 'tank', sprite: 'textures/enemies/enemy_ink_shell',
   },
   'enemy.ink_worm': {
     id: 'enemy.ink_worm', name: '吞灵虫', maxHp: 32, speed: 82, reward: 4,
-    radius: 14, tag: 'swarm', sprite: 'textures/enemies/enemy_ink_worm',
+    radius: 22, tag: 'swarm', sprite: 'textures/enemies/enemy_ink_worm',
   },
   'enemy.ink_tiger': {
     id: 'enemy.ink_tiger', name: '蚀山君', maxHp: 1800, speed: 38, reward: 150,
-    radius: 48, tag: 'boss', isBoss: true, chargeInterval: 8, summonInterval: 12,
+    radius: 64, tag: 'boss', isBoss: true, chargeInterval: 8, summonInterval: 12,
     sprite: 'textures/enemies/enemy_ink_tiger',
   },
   'enemy.mist_shade': {
     id: 'enemy.mist_shade', name: '雾影', maxHp: 70, speed: 75, reward: 12,
-    radius: 24, tag: 'special', stealth: true, stealthPeriod: 3.5,
+    radius: 34, tag: 'special', stealth: true, stealthPeriod: 3.5,
     sprite: 'textures/enemies/enemy_mist_shade',
   },
   'enemy.crack_shell': {
     id: 'enemy.crack_shell', name: '裂壳兽', maxHp: 140, speed: 60, reward: 14,
-    radius: 28, tag: 'special', crack: true,
+    radius: 38, tag: 'special', crack: true,
     sprite: 'textures/enemies/enemy_crack_shell',
   },
   'enemy.spirit_giant': {
     id: 'enemy.spirit_giant', name: '噬灵魁', maxHp: 480, speed: 42, reward: 40,
-    radius: 40, tag: 'elite', sprite: 'textures/enemies/enemy_spirit_giant',
+    radius: 52, tag: 'elite', sprite: 'textures/enemies/enemy_spirit_giant',
   },
 };
 
@@ -267,43 +267,43 @@ export interface WaveEntry {
 }
 
 export const WAVES: WaveEntry[][] = [
-  [{ enemyId: 'enemy.ink_blob', count: 8, interval: 0.85, delay: 0 }],
+  [{ enemyId: 'enemy.ink_blob', count: 8, interval: 1.96, delay: 0 }],
   [
-    { enemyId: 'enemy.ink_blob', count: 10, interval: 0.7, delay: 0 },
-    { enemyId: 'enemy.ink_hound', count: 3, interval: 1.2, delay: 4 },
+    { enemyId: 'enemy.ink_blob', count: 10, interval: 1.61, delay: 0 },
+    { enemyId: 'enemy.ink_hound', count: 3, interval: 1.68, delay: 4 },
   ],
   [
-    { enemyId: 'enemy.ink_blob', count: 6, interval: 0.8, delay: 0 },
-    { enemyId: 'enemy.ink_hound', count: 5, interval: 0.6, delay: 2 },
-    { enemyId: 'enemy.ink_shell', count: 2, interval: 2.0, delay: 6 },
+    { enemyId: 'enemy.ink_blob', count: 6, interval: 1.85, delay: 0 },
+    { enemyId: 'enemy.ink_hound', count: 5, interval: 0.99, delay: 2 },
+    { enemyId: 'enemy.ink_shell', count: 2, interval: 2.8, delay: 6 },
   ],
   [
-    { enemyId: 'enemy.ink_worm', count: 12, interval: 0.35, delay: 0 },
+    { enemyId: 'enemy.ink_worm', count: 12, interval: 0.58, delay: 0 },
     { enemyId: 'enemy.ink_blob', count: 4, interval: 1.0, delay: 3 },
   ],
   [
-    { enemyId: 'enemy.ink_shell', count: 6, interval: 1.4, delay: 0 },
-    { enemyId: 'enemy.ink_blob', count: 8, interval: 0.55, delay: 1.5 },
-    { enemyId: 'enemy.mist_shade', count: 2, interval: 2.5, delay: 4 },
-    { enemyId: 'enemy.crack_shell', count: 2, interval: 3.0, delay: 7 },
+    { enemyId: 'enemy.ink_shell', count: 6, interval: 1.96, delay: 0 },
+    { enemyId: 'enemy.ink_blob', count: 8, interval: 0.91, delay: 1.5 },
+    { enemyId: 'enemy.mist_shade', count: 2, interval: 3.5, delay: 4 },
+    { enemyId: 'enemy.crack_shell', count: 2, interval: 4.2, delay: 7 },
   ],
   [
-    { enemyId: 'enemy.ink_blob', count: 8, interval: 0.5, delay: 0 },
-    { enemyId: 'enemy.ink_hound', count: 6, interval: 0.55, delay: 2 },
-    { enemyId: 'enemy.ink_shell', count: 3, interval: 1.8, delay: 5 },
-    { enemyId: 'enemy.ink_worm', count: 8, interval: 0.3, delay: 8 },
+    { enemyId: 'enemy.ink_blob', count: 8, interval: 0.82, delay: 0 },
+    { enemyId: 'enemy.ink_hound', count: 6, interval: 0.91, delay: 2 },
+    { enemyId: 'enemy.ink_shell', count: 3, interval: 2.52, delay: 5 },
+    { enemyId: 'enemy.ink_worm', count: 8, interval: 0.49, delay: 8 },
   ],
   [
-    { enemyId: 'enemy.ink_worm', count: 16, interval: 0.28, delay: 0 },
-    { enemyId: 'enemy.ink_hound', count: 8, interval: 0.5, delay: 2.5 },
-    { enemyId: 'enemy.ink_shell', count: 2, interval: 2.2, delay: 7 },
-    { enemyId: 'enemy.mist_shade', count: 3, interval: 1.8, delay: 3 },
+    { enemyId: 'enemy.ink_worm', count: 16, interval: 0.46, delay: 0 },
+    { enemyId: 'enemy.ink_hound', count: 8, interval: 0.82, delay: 2.5 },
+    { enemyId: 'enemy.ink_shell', count: 2, interval: 3.08, delay: 7 },
+    { enemyId: 'enemy.mist_shade', count: 3, interval: 2.52, delay: 3 },
     { enemyId: 'enemy.spirit_giant', count: 1, interval: 1.0, delay: 10 },
-    { enemyId: 'enemy.crack_shell', count: 2, interval: 2.5, delay: 8 },
+    { enemyId: 'enemy.crack_shell', count: 2, interval: 3.5, delay: 8 },
   ],
   [
     { enemyId: 'enemy.ink_tiger', count: 1, interval: 1.0, delay: 0 },
-    { enemyId: 'enemy.ink_blob', count: 6, interval: 1.2, delay: 3 },
+    { enemyId: 'enemy.ink_blob', count: 6, interval: 1.68, delay: 3 },
   ],
 ];
 
