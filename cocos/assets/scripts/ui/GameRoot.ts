@@ -47,18 +47,20 @@ export class GameRoot extends Component {
       this.battle = new Battle();
       this.battle.state = 'ready';
 
-      const paint = new Node('UnitPaint');
-      paint.layer = Layers.Enum.UI_2D;
-      const ut = paint.addComponent(UITransform);
-      ut.setContentSize(this.mapW, this.mapH);
-      this.node.addChild(paint);
-      this.gizmo = paint.addComponent(Graphics);
-
+      // 先建 UI/地图，再建单位绘制层，保证在最上
       try {
         this.ui = new GameUI(this.node, this.battle);
       } catch (uiErr) {
         console.error('[GameRoot] GameUI failed, units still paint', uiErr);
       }
+
+      const paint = new Node('UnitPaint');
+      paint.layer = Layers.Enum.UI_2D;
+      const ut = paint.addComponent(UITransform);
+      ut.setContentSize(this.mapW, this.mapH);
+      this.node.addChild(paint);
+      paint.setSiblingIndex(this.node.children.length - 1);
+      this.gizmo = paint.addComponent(Graphics);
 
       input.on(Input.EventType.TOUCH_START, this.onTouch, this);
       input.on(Input.EventType.MOUSE_DOWN, this.onMouseDown, this);
