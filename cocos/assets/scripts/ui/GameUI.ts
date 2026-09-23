@@ -84,6 +84,17 @@ export class GameUI {
     // 与 Godot 同一套 UI 图
     for (const p of [
       'textures/ui/tower_base',
+      'textures/ui/cave_gate',
+      'textures/ui/seed_shrine',
+      'textures/ui/fx_fireball',
+      'textures/ui/fx_water',
+      'textures/ui/fx_thunder',
+      'textures/ui/fx_wind',
+      'textures/ui/fx_ice',
+      'textures/ui/fx_hit',
+      'textures/ui/fx_freeze',
+      'textures/ui/fx_slow',
+      'textures/ui/fx_wet',
       'textures/ui/title_art',
       'textures/ui/panel_toast',
       'textures/ui/panel_dialog',
@@ -186,9 +197,9 @@ export class GameUI {
     }, null, 40);
     startBtn.node.setPosition(0, -80);
 
-    this.makeButton(title, '', 120, 120, () => {
+    this.makeButton(title, '', 140, 140, () => {
       this.showToast('设置（Demo 占位）');
-    }, 'textures/ui/btn_settings', 1).node.setPosition(0, -240);
+    }, 'textures/ui/btn_settings', 1, false).node.setPosition(0, -240);
 
     this.makeLabel(title, 'SHANHAI EMBERS · Cocos Demo', 22, hexColor('#FFFFFF66'), 700, 36).node.setPosition(0, -this.mapH / 2 + 50);
 
@@ -373,6 +384,7 @@ export class GameUI {
     return n;
   }
 
+  /** showPlate=false 时纯图标（无底板），图标居中放大 */
   private makeButton(
     parent: Node,
     text: string,
@@ -381,32 +393,36 @@ export class GameUI {
     onDown: () => void,
     iconPath: string | null = null,
     fontSize = 36,
+    showPlate = true,
   ): Button {
     const n = new Node('Btn_' + (text || 'icon'));
     ensureTransform(n, w, h);
     parent.addChild(n);
-    // 底板用矢量，避免 logo 贴图被拉变形
-    const g = n.addComponent(Graphics);
-    const r = Math.min(20, h * 0.28);
-    g.fillColor = new Color(212, 168, 75, 220);
-    g.roundRect(-w / 2, -h / 2, w, h, r);
-    g.fill();
-    g.fillColor = new Color(70, 62, 36, 240);
-    g.roundRect(-w / 2 + 3, -h / 2 + 3, w - 6, h - 6, Math.max(8, r - 3));
-    g.fill();
-
-    // 图标在文字左侧
-    let textW = w - 24;
-    let textOffX = 0;
-    if (iconPath) {
-      const icon = makeSpriteNode('Icon', Math.min(h * 0.55, 48), iconPath, n);
-      icon.node.setPosition(-w / 2 + 36, 0);
-      textOffX = 18;
-      textW = w - 90;
+    if (showPlate) {
+      const g = n.addComponent(Graphics);
+      const r = Math.min(20, h * 0.28);
+      g.fillColor = new Color(212, 168, 75, 220);
+      g.roundRect(-w / 2, -h / 2, w, h, r);
+      g.fill();
+      g.fillColor = new Color(70, 62, 36, 240);
+      g.roundRect(-w / 2 + 3, -h / 2 + 3, w - 6, h - 6, Math.max(8, r - 3));
+      g.fill();
     }
-    if (text) {
-      const lab = this.makeLabel(n, text, fontSize, hexColor('#FAF3E4'), textW, h * 0.7);
-      lab.node.setPosition(textOffX, 0);
+
+    const iconSize = Math.min(w, h) * 0.78;
+    if (iconPath && !text) {
+      // 纯图标：居中、无底
+      const icon = makeSpriteNode('Icon', iconSize, iconPath, n);
+      icon.node.setPosition(0, 0);
+    } else if (iconPath && text) {
+      // 图标在左、文字在右，整体居中
+      const icon = makeSpriteNode('Icon', Math.min(h * 0.52, 44), iconPath, n);
+      icon.node.setPosition(-w * 0.28, 0);
+      const lab = this.makeLabel(n, text, fontSize, hexColor('#FAF3E4'), w * 0.5, h * 0.7);
+      lab.node.setPosition(w * 0.14, 0);
+    } else if (text) {
+      const lab = this.makeLabel(n, text, fontSize, hexColor('#FAF3E4'), w - 20, h * 0.7);
+      lab.node.setPosition(0, 0);
     }
     const btn = n.addComponent(Button);
     let last = 0;
@@ -417,7 +433,7 @@ export class GameUI {
       onDown();
     };
     bindClick(n, fire);
-    n.on(Node.EventType.TOUCH_START, () => n.setScale(0.94, 0.94, 1));
+    n.on(Node.EventType.TOUCH_START, () => n.setScale(0.92, 0.92, 1));
     n.on(Node.EventType.TOUCH_END, () => n.setScale(1.02, 1.02, 1));
     n.on(Node.EventType.TOUCH_CANCEL, () => n.setScale(1, 1, 1));
     return btn;
@@ -442,20 +458,24 @@ export class GameUI {
     goldPlate.setPosition(20, 0);
     this.hudGold = this.makeLabel(goldPlate, '◉ 320', 30, hexColor('#FAF3E4'), 200, 56);
 
-    // 右上角更大图标钮（与 Godot 一致）
-    const soundBtn = this.makeButton(hud, '', 120, 120, () => {}, 'textures/ui/btn_sound', 1);
-    soundBtn.node.setPosition(240, 0);
-    const speedBtn = this.makeButton(hud, '×1', 120, 120, () => {
+    // 右上角：无底大图标，组内均匀、垂直居中
+    const soundBtn = this.makeButton(hud, '', 110, 110, () => {}, 'textures/ui/btn_sound', 1, false);
+    soundBtn.node.setPosition(300, 0);
+    const speedBtn = this.makeButton(hud, '', 110, 110, () => {
       this.battle.speed = this.battle.speed === 1 ? 2 : 1;
-      const lab = speedBtn.node.getComponentInChildren(Label);
-      if (lab) lab.string = this.battle.speed === 1 ? '×1' : '×2';
-    }, 'textures/ui/btn_speed', 30);
-    speedBtn.node.setPosition(370, 0);
-    const pauseBtn = this.makeButton(hud, '', 120, 120, () => {
+      // 图标上叠倍速字
+      const lab = speedBtn.node.getChildByName('Spd');
+      if (lab) lab.getComponent(Label)!.string = this.battle.speed === 1 ? '×1' : '×2';
+    }, 'textures/ui/btn_speed', 1, false);
+    speedBtn.node.setPosition(430, 0);
+    const spd = this.makeLabel(speedBtn.node, '×1', 28, hexColor('#FAF3E4'), 80, 40);
+    spd.node.name = 'Spd';
+    spd.node.setPosition(0, -36);
+    const pauseBtn = this.makeButton(hud, '', 110, 110, () => {
       this.battle.paused = true;
       this.pausePanel.active = true;
-    }, 'textures/ui/btn_pause', 1);
-    pauseBtn.node.setPosition(500, 0);
+    }, 'textures/ui/btn_pause', 1, false);
+    pauseBtn.node.setPosition(560, 0);
 
     // Boss 血条
     this.bossBar = new Node('BossBar');

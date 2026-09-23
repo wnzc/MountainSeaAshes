@@ -128,6 +128,50 @@ export class GameRoot extends Component {
     }
   }
 
+  private decorCave: Node | null = null;
+  private decorSeed: Node | null = null;
+
+  private syncMapDecor(): void {
+    if (!this.unitSpriteLayer) return;
+    if (!this.decorCave) {
+      const c = makeSpriteNode('CaveGate', 240, 'textures/ui/cave_gate', this.unitSpriteLayer);
+      const ep = this.toLocal(MAP.entry.x, MAP.entry.y);
+      c.node.setPosition(ep.x, ep.y + 16);
+      this.decorCave = c.node;
+    }
+    if (!this.decorSeed) {
+      const s = makeSpriteNode('SeedShrine', 200, 'textures/ui/seed_shrine', this.unitSpriteLayer);
+      this.decorSeed = s.node;
+    }
+    const sp = this.toLocal(MAP.base.x, MAP.base.y);
+    const bob = Math.sin(this.animTime * 3) * 5;
+    if (this.decorSeed) this.decorSeed.setPosition(sp.x, sp.y + bob);
+  }
+
+  /** 攻击/命中特效贴图（短命） */
+  private spawnFxSprite(kind: string, x: number, y: number, size: number): void {
+    if (!this.unitSpriteLayer) return;
+    const path = 'textures/ui/' + kind;
+    const n = makeSpriteNode('Fx_' + kind, size, path, this.unitSpriteLayer);
+    n.node.setPosition(x, y);
+    n.node.setScale(0.5, 0.5, 1);
+    const t0 = this.animTime;
+    const tick = () => {
+      if (!n.node.isValid) return;
+      const k = (this.animTime - t0) / 0.28;
+      if (k >= 1) {
+        n.node.destroy();
+        return;
+      }
+      n.node.setScale(0.5 + k * 0.7, 0.5 + k * 0.7, 1);
+      n.sprite.color = new Color(255, 255, 255, 255 * (1 - k));
+    };
+    // 在 paint 后手动步进：挂到 frame 队列
+    this._fxTicks.push(tick);
+  }
+
+  private _fxTicks: Array<() => void> = [];
+
   private preloadUnitArt(): void {
     for (const id of SPIRIT_ORDER) spriteCache.load(SPIRITS[id].sprite, () => {});
     for (const key of Object.keys(ENEMIES)) spriteCache.load(ENEMIES[key].sprite, () => {});
@@ -198,36 +242,7 @@ export class GameRoot extends Component {
       g.stroke();
     }
 
-    // 路口山洞（盖住道路上端毛边）
-    const entry = MAP.entry;
-    const [ex, ey] = this.v(entry);
-    g.fillColor = new Color(45, 42, 38, 255);
-    g.ellipse(ex, ey - 10, 70, 55);
-    g.fill();
-    g.fillColor = new Color(12, 12, 14, 255);
-    g.ellipse(ex, ey + 8, 42, 36);
-    g.fill();
-    g.strokeColor = new Color(90, 85, 75, 220);
-    g.lineWidth = 6;
-    g.ellipse(ex, ey - 10, 70, 55);
-    g.stroke();
-    // 洞口微光
-    g.fillColor = new Color(194, 59, 46, 50 + 30 * Math.sin(t * 3));
-    g.ellipse(ex, ey + 8, 28, 22);
-    g.fill();
-
-    // 灵种底座（道路下端）
-    const seed = MAP.base;
-    const [bx, by] = this.v(seed);
-    g.fillColor = new Color(212, 168, 75, 210);
-    g.circle(bx, by, 36);
-    g.fill();
-    g.fillColor = new Color(240, 192, 96, 255);
-    g.ellipse(bx, by - 4, 16, 22);
-    g.fill();
-    g.fillColor = new Color(255, 230, 150, 60 + 40 * Math.sin(t * 4));
-    g.circle(bx, by, 48);
-    g.fill();
+    // 路口山洞 / 灵种由 syncMapDecor 贴图绘制
 
     // 塔位底座 + 灵兽矢量底影
     for (const slot of battle.slots.values()) {
@@ -342,10 +357,12 @@ export class GameRoot extends Component {
         g.fillColor = new Color(col.r, col.g, col.b, 50);
         g.circle(fx2, fy, 30);
         g.fill();
+        this.spawnFxSprite('fx_hit', fx2, fy, 72);
       } else {
         g.fillColor = col;
         g.circle(fx2, fy, 12);
         g.fill();
+        this.spawnFxSprite('fx_spark', fx2, fy, 48);
       }
     }
     this.frameFx = [];
@@ -443,8 +460,12 @@ export class GameRoot extends Component {
     } catch (_) {
       this.frameFx = [];
     }
+    this.syncMapDecor();
     this.paintUnits();
     this.syncUnitSprites();
+    const ticks = this._fxTicks;
+    this._fxTicks = [];
+    for (const fn of ticks) fn();
     this.debugTimer += dt;
     if (this.debugTimer > 2) {
       this.debugTimer = 0;
