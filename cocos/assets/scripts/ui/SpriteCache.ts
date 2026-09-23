@@ -57,8 +57,11 @@ export class SpriteCache {
     return this.frames.get(path) || null;
   }
 
-  preload(paths: string[]): void {
-    for (const p of paths) this.load(p, () => {});
+  preload(paths: Iterable<string> | Set<string> | string[]): void {
+    const list = Array.isArray(paths) ? paths : Array.from(paths as Iterable<string>);
+    for (const p of list) {
+      if (typeof p === 'string') this.load(p, () => {});
+    }
   }
 }
 

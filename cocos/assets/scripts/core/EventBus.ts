@@ -18,6 +18,7 @@ export class EventBus {
     const set = this.map.get(name);
     if (!set) return;
     for (const fn of [...set]) {
+      if (typeof fn !== 'function') continue;
       try {
         fn(...args);
       } catch (e) {
