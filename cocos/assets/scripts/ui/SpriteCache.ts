@@ -73,10 +73,10 @@ export function makeSpriteNode(
 ): { node: Node; sprite: Sprite } {
   const node = new Node(name);
   const ut = node.addComponent(UITransform);
+  // 先按正方占位，加载后按贴图比例收缩，避免拉伸
   ut.setContentSize(size, size);
   node.layer = Layers.Enum.UI_2D;
   parent.addChild(node);
-  // 立绘不挡点击
   (ut as unknown as { isHit: () => boolean }).isHit = function isHit() {
     return false;
   };
@@ -89,8 +89,14 @@ export function makeSpriteNode(
     if (sf) {
       sprite.spriteFrame = sf;
       sprite.color = Color.WHITE;
+      sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+      const tw = sf.rect.width || 1;
+      const th = sf.rect.height || 1;
+      const scale = size / Math.max(tw, th);
+      const w = Math.round(tw * scale);
+      const h = Math.round(th * scale);
+      node.getComponent(UITransform)!.setContentSize(w, h);
     } else {
-      // 加载失败用亮色块提示
       sprite.color = new Color(220, 80, 80, 255);
     }
   });

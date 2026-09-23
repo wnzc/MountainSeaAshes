@@ -157,12 +157,14 @@ export class GameUI {
     ensureTransform(art, this.mapW, this.mapH);
     title.addChild(art);
     const sp = art.addComponent(Sprite);
-    sp.sizeMode = Sprite.SizeMode.CUSTOM;
     sp.type = Sprite.Type.SIMPLE;
+    // 保持贴图比例（TRIMMED），避免满屏硬拉变形
+    sp.sizeMode = Sprite.SizeMode.TRIMMED;
     spriteCache.load('textures/ui/title_art', (sf) => {
       if (sf) {
         sp.spriteFrame = sf;
         sp.color = Color.WHITE;
+        sp.sizeMode = Sprite.SizeMode.TRIMMED;
       }
     });
     // 半透明压暗
@@ -231,6 +233,7 @@ export class GameUI {
         this.bgSprite.spriteFrame = sf;
         this.bgSprite.color = Color.WHITE;
         this.bgSprite.type = Sprite.Type.SIMPLE;
+        // 9:21 图铺满 1080x2520 画布时用 CUSTOM；图为 9:21 则不拉伸
         this.bgSprite.sizeMode = Sprite.SizeMode.CUSTOM;
       } else {
         console.warn('[GameUI] background missing', MAP.background);
