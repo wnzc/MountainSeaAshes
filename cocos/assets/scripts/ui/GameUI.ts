@@ -11,6 +11,8 @@ import {
   Vec3,
   BlockInputEvents,
   UITransform,
+  sys,
+  view,
 } from 'cc';
 import {
   MAP,
@@ -28,6 +30,9 @@ import { spriteCache, makeSpriteNode } from './SpriteCache';
 export class GameUI {
   root: Node;
   battle: Battle;
+  /** 刘海 / 底部小白条安全区（设计分辨率像素） */
+  private safeTop = 0;
+  private safeBottom = 0;
 
   private world!: Node;
   private fxLayer!: Node;
@@ -65,6 +70,7 @@ export class GameUI {
   constructor(root: Node, battle: Battle) {
     this.root = root;
     this.battle = battle;
+    this.measureSafeArea();
     this.preloadArt();
     this.buildLayers();
     this.drawMapStatic();
@@ -441,11 +447,40 @@ export class GameUI {
     return btn;
   }
 
+  /** 读取手机状态栏 / 小白条 inset，UI 不要压上去 */
+  private measureSafeArea(): void {
+    let top = 0;
+    let bottom = 0;
+    try {
+      const sa: any = (sys as any).getSafeArea?.();
+      if (sa) {
+        top = Number(sa.top) || 0;
+        bottom = Number(sa.bottom) || 0;
+      }
+      const rect: any = (view as any).getSafeAreaRect?.();
+      if (rect && rect.size) {
+        // 以设计高换算（若引擎给出的是屏幕像素）
+        const vs = view.getDesignResolutionSize();
+        const scale = this.mapH / Math.max(1, vs.height);
+        if (top <= 0 && rect.position) top = Math.max(0, rect.position.y) * scale;
+        if (bottom <= 0) {
+          bottom = Math.max(0, vs.height - (rect.position.y + rect.size.height)) * scale;
+        }
+      }
+    } catch (_) {
+      /* 桌面预览无 safe area */
+    }
+    // 兜底：刘海 / Home Indicator
+    this.safeTop = Math.max(top, 64);
+    this.safeBottom = Math.max(bottom, 48);
+  }
+
   private buildHud(): void {
     const hud = new Node('HUD');
     this.hudNode = hud;
     ensureTransform(hud, this.mapW, 150);
-    hud.setPosition(0, this.mapH / 2 - 72);
+    // 顶部让开状态栏
+    hud.setPosition(0, this.mapH / 2 - 72 - this.safeTop);
     this.uiLayer.addChild(hud);
     hud.active = false;
 
@@ -482,7 +517,7 @@ export class GameUI {
     // Boss 血条
     this.bossBar = new Node('BossBar');
     ensureTransform(this.bossBar, 700, 28);
-    this.bossBar.setPosition(0, this.mapH / 2 - 160);
+    this.bossBar.setPosition(0, this.mapH / 2 - 160 - this.safeTop);
     this.bossBar.active = false;
     this.uiLayer.addChild(this.bossBar);
     this.makeLabel(this.bossBar, '蚀山君', 32, hexColor('#C8C8C8'), 240, 40).node.setPosition(0, 28);
@@ -496,7 +531,7 @@ export class GameUI {
     this.chainBanner.node.active = false;
 
     const toastPlate = this.makePlate(this.uiLayer, 'ToastPlate', 780, 96, 'textures/ui/panel_toast');
-    toastPlate.setPosition(0, this.mapH / 2 - 230);
+    toastPlate.setPosition(0, this.mapH / 2 - 230 - this.safeTop);
     toastPlate.active = false;
     this.toast = this.makeLabel(toastPlate, '', 40, hexColor('#FAF3E4'), 760, 80);
     this.toast.node.name = 'ToastText';
@@ -510,7 +545,8 @@ export class GameUI {
     const bar = new Node('CardBar');
     this.cardBar = bar;
     ensureTransform(bar, this.mapW, 260);
-    bar.setPosition(0, -this.mapH / 2 + 140);
+    // 底部让开 Home Indicator / 小白条
+    bar.setPosition(0, -this.mapH / 2 + 140 + this.safeBottom);
     this.uiLayer.addChild(bar);
     bar.active = false;
     const n = SPIRIT_ORDER.length;
@@ -552,7 +588,7 @@ export class GameUI {
   private buildPanels(): void {
     // 塔位操作（panel_dialog，与 Godot SlotPanel 一致）
     this.slotPanel = this.makePlate(this.uiLayer, 'SlotPanel', 980, 320, 'textures/ui/panel_dialog');
-    this.slotPanel.setPosition(0, -this.mapH / 2 + 520);
+    this.slotPanel.setPosition(0, -this.mapH / 2 + 520 + this.safeBottom);
     this.slotPanel.active = false;
     this.slotTitle = this.makeLabel(this.slotPanel, '', 56, hexColor('#FAF3E4'), 940, 72);
     this.slotTitle.node.setPosition(0, 100);
