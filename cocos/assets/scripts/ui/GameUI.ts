@@ -208,6 +208,32 @@ export class GameUI {
     this.showToast('放置灵兽，守住灵种！');
   }
 
+  private onSlotTap(slotId: string): void {
+    const slot = this.battle.slots.get(slotId);
+    if (!slot) return;
+    const card = this.battle.selectedCard;
+    if (card && !slot.spirit) {
+      const ok = this.battle.placeSpirit(slotId, card);
+      if (ok) {
+        this.battle.selectedCard = null;
+        this.battle.selectSlot(slotId);
+        this.refreshCards();
+        this.showToast('已放置');
+      } else {
+        this.showToast('金币不足或无法放置');
+      }
+      return;
+    }
+    if (slot.spirit) {
+      this.battle.selectSlot(slotId);
+      this.showSlotPanel(slotId);
+      return;
+    }
+    this.showToast('先点下方灵兽卡，再点底座');
+    this.battle.selectSlot(slotId);
+    this.showSlotPanel(slotId);
+  }
+
   private showTitle(): void {
     if (this.startPanel) this.startPanel.active = true;
     if (this.hudNode) this.hudNode.active = false;
@@ -270,16 +296,28 @@ export class GameUI {
     this.world.addChild(slotNode);
     for (const s of MAP.slots) {
       const p = this.toLocal(s.x, s.y);
-      const base = makeSpriteNode('Base_' + s.id, 100, 'textures/ui/tower_base', slotNode);
-      base.node.setPosition(p.x, p.y);
+      // 矢量底座（不拉伸）+ 图标可选
+      const pad = new Node('Pad_' + s.id);
+      ensureTransform(pad, 110, 110);
+      pad.setPosition(p.x, p.y);
+      slotNode.addChild(pad);
+      const pg2 = pad.addComponent(Graphics);
+      pg2.fillColor = new Color(212, 168, 75, 230);
+      pg2.circle(0, 0, 48);
+      pg2.fill();
+      pg2.fillColor = new Color(255, 245, 220, 40);
+      pg2.circle(0, 0, 34);
+      pg2.fill();
+      pg2.fillColor = new Color(40, 48, 40, 60);
+      pg2.circle(0, 0, 16);
+      pg2.fill();
+      passHits(pad);
+
       const hit = new Node('SlotHit_' + s.id);
-      ensureTransform(hit, 140, 140);
+      ensureTransform(hit, 180, 180);
       hit.setPosition(p.x, p.y);
       slotNode.addChild(hit);
-      // 仅一种点击
-      bindClick(hit, () => {
-        this.battle.handlePointer(s.x, s.y);
-      });
+      bindClick(hit, () => this.onSlotTap(s.id));
     }
 
     // 灵种
@@ -668,24 +706,32 @@ export class GameUI {
     this.fxLayer.addChild(fxgNode);
     const fxg = fxgNode.addComponent(Graphics);
 
-    // 灵兽立绘：严格贴塔位坐标
+    // 灵兽：矢量剪影保证可见（贴图仅作增强）
     for (const s of this.battle.spirits) {
       const key = s.slotId;
       const slot = this.battle.slots.get(key);
       const mx = slot ? slot.x : s.pos.x;
       const my = slot ? slot.y : s.pos.y;
+      const p = this.toLocal(mx, my);
+      const col = ELEMENTS[s.element] || ELEMENTS.FIRE;
+      const body = hexColor(col.color, 245);
+      // 底座光环
+      drawCircle(fxg, p.x, p.y - 6, 36, hexColor(col.color, 55));
+      // 身体
+      drawCircle(fxg, p.x, p.y - 8, 28, body);
+      drawCircle(fxg, p.x, p.y - 44, 20, body);
+      // 眼
+      drawCircle(fxg, p.x - 7, p.y - 48, 3, new Color(20, 20, 20, 255));
+      drawCircle(fxg, p.x + 7, p.y - 48, 3, new Color(20, 20, 20, 255));
+      // 贴图叠加（失败也不影响显示）
       let view = this.spiritSprites.get(key);
       if (!view) {
         view = makeSpriteNode('Spirit_' + key, 150, s.config.sprite, this.unitLayer);
         this.spiritSprites.set(key, view);
       }
-      const p = this.toLocal(mx, my);
-      view.node.setPosition(p.x, p.y - 8);
+      view.node.setPosition(p.x, p.y - 10);
       view.node.active = true;
-      const col = ELEMENTS[s.element];
-      if (col) drawCircle(fxg, p.x, p.y, 34, hexColor(col.color, 60));
     }
-    // 清理已撤回的灵兽
     for (const [key, view] of this.spiritSprites) {
       const slot = this.battle.slots.get(key);
       if (!slot || !slot.spirit) {
@@ -695,32 +741,35 @@ export class GameUI {
     }
 
     // 邻接共鸣线
-    for (const [a, b] of this.battle.resonance.links(this.battle.slots)) {
-      const pa = this.toLocal(a.pos.x, a.pos.y);
-      const pb = this.toLocal(b.pos.x, b.pos.y);
-      fxg.strokeColor = new Color(212, 168, 75, 90);
-      fxg.lineWidth = 3;
-      fxg.moveTo(pa.x, pa.y);
-      fxg.lineTo(pb.x, pb.y);
-      fxg.stroke();
-    }
+    try {
+      for (const [a, b] of this.battle.resonance.links(this.battle.slots)) {
+        const pa = this.toLocal(a.pos.x, a.pos.y);
+        const pb = this.toLocal(b.pos.x, b.pos.y);
+        fxg.strokeColor = new Color(212, 168, 75, 90);
+        fxg.lineWidth = 3;
+        fxg.moveTo(pa.x, pa.y);
+        fxg.lineTo(pb.x, pb.y);
+        fxg.stroke();
+      }
+    } catch (_) { /* ignore */ }
 
-    // 敌人立绘
+    // 敌人：先矢量墨团，再贴图
     const aliveIds = new Set<number>();
     for (const e of this.battle.enemies) {
       if (!e.alive) continue;
       aliveIds.add(e.id);
+      const p = this.toLocal(e.pos.x, e.pos.y);
+      drawCircle(fxg, p.x, p.y, Math.max(16, e.config.radius), new Color(24, 24, 24, 235));
+      drawCircle(fxg, p.x - 6, p.y - 2, 3, new Color(194, 59, 46, 255));
+      drawCircle(fxg, p.x + 6, p.y - 2, 3, new Color(194, 59, 46, 255));
       let view = this.enemySprites.get(e.id);
       if (!view) {
         const sz = Math.max(64, e.config.radius * 2.6);
         view = makeSpriteNode('Enemy_' + e.id, sz, e.config.sprite, this.unitLayer);
         this.enemySprites.set(e.id, view);
       }
-      const p = this.toLocal(e.pos.x, e.pos.y);
       view.node.setPosition(p.x, p.y);
       view.node.active = true;
-      // 兜底墨团，保证“有怪物”可见
-      drawCircle(fxg, p.x, p.y, e.config.radius * 0.85, new Color(24, 24, 24, 220));
       if (e.element && this.battle.time < e.elementUntil) {
         const el = ELEMENTS[e.element];
         if (el) {
