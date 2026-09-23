@@ -35,3 +35,31 @@ export function pathLength(pts: { x: number; y: number }[]): number {
   }
   return len;
 }
+
+/** 把点推到距离路径至少 gap 的位置 */
+export function pushOffPath(p: { x: number; y: number }, path: { x: number; y: number }[], gap: number): { x: number; y: number } {
+  let bestD = Infinity;
+  let bestProj = { x: p.x, y: p.y };
+  for (let i = 0; i < path.length - 1; i++) {
+    const a = path[i];
+    const b = path[i + 1];
+    const abx = b.x - a.x;
+    const aby = b.y - a.y;
+    const t = Math.max(0, Math.min(1, ((p.x - a.x) * abx + (p.y - a.y) * aby) / ((abx * abx + aby * aby) || 1)));
+    const proj = { x: a.x + abx * t, y: a.y + aby * t };
+    const d = Math.hypot(p.x - proj.x, p.y - proj.y);
+    if (d < bestD) {
+      bestD = d;
+      bestProj = proj;
+    }
+  }
+  if (bestD >= gap) return p;
+  if (bestD < 0.5) {
+    const seg = { x: path[1].x - path[0].x, y: path[1].y - path[0].y };
+    const len = Math.hypot(seg.x, seg.y) || 1;
+    return { x: bestProj.x + (-seg.y / len) * gap, y: bestProj.y + (seg.x / len) * gap };
+  }
+  const side = { x: p.x - bestProj.x, y: p.y - bestProj.y };
+  const sl = Math.hypot(side.x, side.y) || 1;
+  return { x: bestProj.x + (side.x / sl) * gap, y: bestProj.y + (side.y / sl) * gap };
+}

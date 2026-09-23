@@ -7,7 +7,7 @@ import {
   ReactionConfig,
   Vec2,
 } from '../config/GameConfig';
-import { smoothPath } from './PathUtil';
+import { smoothPath, pushOffPath } from './PathUtil';
 import { bus } from './EventBus';
 import { EnemyUnit } from './EnemyUnit';
 import { SpiritUnit, SlotRuntime } from './SpiritUnit';
@@ -114,10 +114,11 @@ export class Battle {
     this.spawnQueues = [];
     this.slots.clear();
     for (const s of MAP.slots) {
+      const pos = pushOffPath({ x: s.x, y: s.y }, this.path, 95);
       this.slots.set(s.id, {
         id: s.id,
-        x: s.x,
-        y: s.y,
+        x: pos.x,
+        y: pos.y,
         neighborIds: s.neighborIds.slice(),
         spirit: null,
       });

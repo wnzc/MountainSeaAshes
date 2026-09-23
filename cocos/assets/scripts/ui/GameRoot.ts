@@ -269,11 +269,16 @@ export class GameRoot extends Component {
         g.fill();
         g.circle(x, y - 42, 15 * sc);
         g.fill();
-        // 射程圈（淡）
-        g.strokeColor = new Color(c.r, c.g, c.b, 40);
-        g.lineWidth = 2;
-        g.circle(x, y, slot.spirit.range);
-        g.stroke();
+        // 点击选中时显示攻击范围
+        if (battle.selectedSlot === slot.id) {
+          g.strokeColor = new Color(c.r, c.g, c.b, 200);
+          g.lineWidth = 4;
+          g.circle(x, y, slot.spirit.range);
+          g.stroke();
+          g.fillColor = new Color(c.r, c.g, c.b, 35);
+          g.circle(x, y, slot.spirit.range);
+          g.fill();
+        }
       }
     }
 

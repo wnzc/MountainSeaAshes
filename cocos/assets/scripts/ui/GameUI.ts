@@ -314,7 +314,7 @@ export class GameUI {
     const slotNode = new Node('Slots');
     ensureTransform(slotNode, this.mapW, this.mapH);
     this.world.addChild(slotNode);
-    for (const s of MAP.slots) {
+    for (const s of this.battle.slots.values()) {
       const p = this.toLocal(s.x, s.y);
       // 矢量底座（不拉伸）+ 图标可选
       const pad = new Node('Pad_' + s.id);
@@ -409,14 +409,14 @@ export class GameUI {
       g.fill();
     }
 
-    const iconSize = Math.min(w, h) * 0.78;
+    const iconSize = Math.min(w, h) * 0.86;
     if (iconPath && !text) {
       // 纯图标：居中、无底
       const icon = makeSpriteNode('Icon', iconSize, iconPath, n);
       icon.node.setPosition(0, 0);
     } else if (iconPath && text) {
       // 图标在左、文字在右，整体居中
-      const icon = makeSpriteNode('Icon', Math.min(h * 0.52, 44), iconPath, n);
+      const icon = makeSpriteNode('Icon', Math.min(h * 0.78, 64), iconPath, n);
       icon.node.setPosition(-w * 0.28, 0);
       const lab = this.makeLabel(n, text, fontSize, hexColor('#FAF3E4'), w * 0.5, h * 0.7);
       lab.node.setPosition(w * 0.14, 0);
@@ -496,7 +496,7 @@ export class GameUI {
     const toastPlate = this.makePlate(this.uiLayer, 'ToastPlate', 780, 96, 'textures/ui/panel_toast');
     toastPlate.setPosition(0, this.mapH / 2 - 230);
     toastPlate.active = false;
-    this.toast = this.makeLabel(toastPlate, '', 36, hexColor('#FAF3E4'), 720, 72);
+    this.toast = this.makeLabel(toastPlate, '', 40, hexColor('#FAF3E4'), 760, 80);
     this.toast.node.name = 'ToastText';
     // 保持引用兼容
     (this as any)._toastPlate = toastPlate;
@@ -507,8 +507,8 @@ export class GameUI {
   private buildCards(): void {
     const bar = new Node('CardBar');
     this.cardBar = bar;
-    ensureTransform(bar, this.mapW, 300);
-    bar.setPosition(0, -this.mapH / 2 + 160);
+    ensureTransform(bar, this.mapW, 260);
+    bar.setPosition(0, -this.mapH / 2 + 140);
     this.uiLayer.addChild(bar);
     bar.active = false;
     const n = SPIRIT_ORDER.length;
@@ -552,26 +552,26 @@ export class GameUI {
     this.slotPanel = this.makePlate(this.uiLayer, 'SlotPanel', 980, 320, 'textures/ui/panel_dialog');
     this.slotPanel.setPosition(0, -this.mapH / 2 + 520);
     this.slotPanel.active = false;
-    this.slotTitle = this.makeLabel(this.slotPanel, '', 48, hexColor('#FAF3E4'), 940, 64);
+    this.slotTitle = this.makeLabel(this.slotPanel, '', 56, hexColor('#FAF3E4'), 940, 72);
     this.slotTitle.node.setPosition(0, 100);
-    this.slotMeta = this.makeLabel(this.slotPanel, '', 32, hexColor('#D8D0B8'), 940, 110);
+    this.slotMeta = this.makeLabel(this.slotPanel, '', 40, hexColor('#E8E0C8'), 940, 130);
     this.slotMeta.node.setPosition(0, 24);
-    this.btnUpgrade = this.makeButton(this.slotPanel, '升级', 380, 80, () => {
+    this.btnUpgrade = this.makeButton(this.slotPanel, '升级', 400, 100, () => {
       if (this.battle.selectedSlot) {
         this.battle.upgradeSpirit(this.battle.selectedSlot);
         this.showSlotPanel(this.battle.selectedSlot);
         this.refreshCards();
       }
-    }, 'textures/ui/btn_upgrade', 34);
+    }, 'textures/ui/btn_upgrade', 44);
     this.btnUpgrade.node.setPosition(-210, -100);
-    this.btnSell = this.makeButton(this.slotPanel, '撤回', 380, 80, () => {
+    this.btnSell = this.makeButton(this.slotPanel, '撤回', 400, 100, () => {
       if (this.battle.selectedSlot) {
         this.battle.sellSpirit(this.battle.selectedSlot);
         this.slotPanel.active = false;
         this.battle.selectSlot(null);
         this.refreshCards();
       }
-    }, 'textures/ui/btn_sell', 34);
+    }, 'textures/ui/btn_sell', 44);
     this.btnSell.node.setPosition(210, -100);
 
     // 暂停（panel_tall）
@@ -590,7 +590,7 @@ export class GameUI {
     // 结算（panel_tall）
     this.resultPanel = this.makeOverlay('山河复色', 'textures/ui/panel_tall');
     this.resultTitle = this.resultPanel.getChildByName('Title')!.getComponent(Label)!;
-    this.resultStats = this.makeLabel(this.resultPanel, '', 32, hexColor('#D8D0B8'), 800, 64);
+    this.resultStats = this.makeLabel(this.resultPanel, '', 40, hexColor('#E8E0C8'), 800, 72);
     this.resultStats.node.setPosition(0, 40);
     this.makeButton(this.resultPanel, '再来一局', 360, 88, () => {
       this.resultPanel.active = false;
