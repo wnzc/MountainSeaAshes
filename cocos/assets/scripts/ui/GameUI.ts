@@ -351,15 +351,15 @@ export class GameUI {
     hud.active = false;
 
     // 信息用 panel_toast 底图（浅字+深底）
-    const wavePlate = this.makePlate(hud, 'WavePlate', 240, 84, 'textures/ui/panel_toast');
+    const wavePlate = this.makePlate(hud, 'WavePlate', 200, 68, 'textures/ui/panel_toast');
     wavePlate.setPosition(-400, 0);
-    this.hudWave = this.makeLabel(wavePlate, '1/8', 44, hexColor('#FAF3E4'), 220, 72);
-    const hpPlate = this.makePlate(hud, 'HpPlate', 220, 84, 'textures/ui/panel_toast');
+    this.hudWave = this.makeLabel(wavePlate, '1/8', 30, hexColor('#FAF3E4'), 200, 56);
+    const hpPlate = this.makePlate(hud, 'HpPlate', 180, 68, 'textures/ui/panel_toast');
     hpPlate.setPosition(-180, 0);
-    this.hudHp = this.makeLabel(hpPlate, '❤ 20', 44, hexColor('#FAF3E4'), 200, 72);
-    const goldPlate = this.makePlate(hud, 'GoldPlate', 240, 84, 'textures/ui/panel_toast');
+    this.hudHp = this.makeLabel(hpPlate, '❤ 20', 30, hexColor('#FAF3E4'), 180, 56);
+    const goldPlate = this.makePlate(hud, 'GoldPlate', 200, 68, 'textures/ui/panel_toast');
     goldPlate.setPosition(20, 0);
-    this.hudGold = this.makeLabel(goldPlate, '◉ 320', 44, hexColor('#FAF3E4'), 220, 72);
+    this.hudGold = this.makeLabel(goldPlate, '◉ 320', 30, hexColor('#FAF3E4'), 200, 56);
 
     // 右上角更大图标钮（与 Godot 一致）
     const soundBtn = this.makeButton(hud, '', 120, 120, () => {}, 'textures/ui/btn_sound', 1);
