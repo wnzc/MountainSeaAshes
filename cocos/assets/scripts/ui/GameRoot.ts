@@ -319,8 +319,8 @@ export class GameRoot extends Component {
     // 弹道（攻击动画）
     for (const p of battle.projectiles) {
       const [px, py] = this.v(p.pos);
-      const el = ELEMENTS[p.element];
-      const c = this.hex(el ? el.glow || el.color : '#FFD27A');
+      const el: any = (ELEMENTS as any)[p.element];
+      const c = this.hex(String(el ? el.glow || el.color : '#FFD27A'));
       g.fillColor = c;
       g.circle(px, py, 8);
       g.fill();
