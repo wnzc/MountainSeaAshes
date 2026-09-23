@@ -510,6 +510,7 @@ export class GameUI {
         if (now - lastPick < 250) return;
         lastPick = now;
         this.battle.selectCard(id);
+        this.refreshCards();
       };
       // 只绑一种点击，避免 CLICK+TOUCH 双触发把选中又取消
       bindClick(card, pick);
