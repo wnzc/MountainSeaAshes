@@ -316,30 +316,15 @@ export class GameUI {
       wg.fill();
     }
 
-    // 塔位：底座 + 明确点击热区（全局 input 不稳时仍可放置）
+    // 塔位：只用 tower_base 底座贴图 + 点击热区（不画金圈）
     const slotNode = new Node('Slots');
     ensureTransform(slotNode, this.mapW, this.mapH);
     this.world.addChild(slotNode);
     for (const s of this.battle.slots.values()) {
       const p = this.toLocal(s.x, s.y);
-      // 矢量底座（不拉伸）+ 图标可选
-      const pad = new Node('Pad_' + s.id);
-      ensureTransform(pad, 110, 110);
-      pad.setPosition(p.x, p.y);
-      slotNode.addChild(pad);
-      const pg2 = pad.addComponent(Graphics);
-      pg2.fillColor = new Color(212, 168, 75, 230);
-      pg2.circle(0, 0, 48);
-      pg2.fill();
-      pg2.fillColor = new Color(255, 245, 220, 40);
-      pg2.circle(0, 0, 34);
-      pg2.fill();
-      pg2.fillColor = new Color(40, 48, 40, 60);
-      pg2.circle(0, 0, 16);
-      pg2.fill();
-      const baseArt = makeSpriteNode('BaseArt_' + s.id, 124, 'textures/ui/tower_base', slotNode);
-      baseArt.node.setPosition(p.x, p.y + 8);
-      passHits(pad);
+      const baseArt = makeSpriteNode('BaseArt_' + s.id, 148, 'textures/ui/tower_base', slotNode);
+      baseArt.node.setPosition(p.x, p.y + 12);
+      passHits(baseArt.node);
 
       const hit = new Node('SlotHit_' + s.id);
       ensureTransform(hit, 180, 180);
@@ -354,8 +339,7 @@ export class GameUI {
     this.world.addChild(baseNode);
     const bg2 = baseNode.addComponent(Graphics);
     const bp = this.toLocal(MAP.base.x, MAP.base.y);
-    drawCircle(bg2, bp.x, bp.y, 42, new Color(90, 200, 120, 220));
-    drawCircle(bg2, bp.x, bp.y, 28, new Color(210, 240, 210, 255));
+    
   }
 
   private makeLabel(parent: Node, text: string, size: number, color: Color, w = 200, h = 48): Label {

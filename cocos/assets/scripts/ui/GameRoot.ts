@@ -133,25 +133,27 @@ export class GameRoot extends Component {
 
   private syncMapDecor(): void {
     if (!this.unitSpriteLayer || !this.battle) return;
+    const path = this.battle.path;
+    const start = path[0];
+    const last = path[path.length - 1];
+    const prev = path[Math.max(0, path.length - 2)];
     if (!this.decorCave) {
-      const c = makeSpriteNode('CaveGate', 320, 'textures/ui/cave_gate', this.unitSpriteLayer);
-      const ep = this.toLocal(MAP.entry.x, MAP.entry.y);
-      c.node.setPosition(ep.x, ep.y - 24);
+      const c = makeSpriteNode('CaveGate', 380, 'textures/ui/cave_gate', this.unitSpriteLayer);
       this.decorCave = c.node;
     }
     if (!this.decorSeed) {
-      const s = makeSpriteNode('SeedShrine', 360, 'textures/ui/seed_shrine', this.unitSpriteLayer);
+      const s = makeSpriteNode('SeedShrine', 420, 'textures/ui/seed_shrine', this.unitSpriteLayer);
       this.decorSeed = s.node;
     }
-    const bob = Math.sin(this.animTime * 3) * 5;
-    const path = this.battle.path;
-    const last = path[path.length - 1];
-    const prev = path[Math.max(0, path.length - 3)];
+    const bob = Math.sin(this.animTime * 3) * 4;
+    // 洞口对齐路径起点，略下沉盖住线头
+    const sp0 = this.toLocal(start.x, start.y);
+    if (this.decorCave) this.decorCave.setPosition(sp0.x, sp0.y - 20);
+    // 灵种台压住整段路尾
     const lp = this.toLocal(last.x, last.y);
     const pp = this.toLocal(prev.x, prev.y);
-    // 灵种台压在路尾，盖住线头
     const cx = (lp.x + pp.x) / 2;
-    const cy = (lp.y + pp.y) / 2 + 28 + bob;
+    const cy = (lp.y + pp.y) / 2 + 36 + bob;
     if (this.decorSeed) this.decorSeed.setPosition(cx, cy);
   }
 
@@ -198,7 +200,7 @@ export class GameRoot extends Component {
         this.spiritSprites.set(key, view);
       }
       const p = this.toLocal(slot.x, slot.y);
-      view.node.setPosition(p.x, p.y - 8);
+      view.node.setPosition(p.x, p.y - 4);
       view.node.active = true;
     }
     for (const [key, view] of this.spiritSprites) {
@@ -254,16 +256,7 @@ export class GameRoot extends Component {
     // 塔位底座 + 灵兽矢量底影
     for (const slot of battle.slots.values()) {
       const [x, y] = this.v(slot);
-      // 底座（空位也显示，层级低于弹窗）
-      g.fillColor = new Color(212, 168, 75, slot.spirit ? 120 : 230);
-      g.circle(x, y, 44);
-      g.fill();
-      g.fillColor = new Color(255, 245, 220, 45);
-      g.circle(x, y, 30);
-      g.fill();
-      g.fillColor = new Color(40, 48, 40, 50);
-      g.circle(x, y, 14);
-      g.fill();
+      // 底座由 tower_base 贴图绘制，这里不画圆
       if (slot.spirit) {
         const col = ELEMENTS[slot.spirit.element];
         const c = this.hex(col ? col.color : '#E85D3A');
