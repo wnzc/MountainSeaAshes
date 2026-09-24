@@ -39,7 +39,7 @@ export interface SpiritConfig {
 export const SPIRITS: Record<string, SpiritConfig> = {
   'spirit.red_feather': {
     id: 'spirit.red_feather', name: '赤羽', element: 'FIRE',
-    cost: 40, range: 220, attackInterval: 0.9, damage: 16,
+    cost: 40, range: 280, attackInterval: 0.55, damage: 16,
     attackType: 'projectile', splash: 40, status: 'BURN', statusDuration: 2.5,
     projectileSpeed: 420, upgradeCost: [50, 90], upgradeDamage: [8, 12],
     desc: '喷吐火团，命中留下短暂燃烧',
@@ -47,7 +47,7 @@ export const SPIRITS: Record<string, SpiritConfig> = {
   },
   'spirit.azure_scale': {
     id: 'spirit.azure_scale', name: '沧璃', element: 'WATER',
-    cost: 50, range: 230, attackInterval: 1.1, damage: 9,
+    cost: 50, range: 290, attackInterval: 0.7, damage: 9,
     attackType: 'projectile', splash: 0, status: 'WET', statusDuration: 3.5,
     projectileSpeed: 380, upgradeCost: [55, 100], upgradeDamage: [5, 8],
     desc: '水弹使敌人潮湿并留下水迹',
@@ -55,7 +55,7 @@ export const SPIRITS: Record<string, SpiritConfig> = {
   },
   'spirit.thunder_horn': {
     id: 'spirit.thunder_horn', name: '雷角', element: 'LIGHTNING',
-    cost: 60, range: 240, attackInterval: 0.75, damage: 18,
+    cost: 60, range: 300, attackInterval: 0.45, damage: 18,
     attackType: 'beam', chainRange: 140, chainCount: 2, preferWet: true,
     status: 'CHARGED', statusDuration: 1.8, projectileSpeed: 0,
     upgradeCost: [70, 120], upgradeDamage: [9, 14],
@@ -64,7 +64,7 @@ export const SPIRITS: Record<string, SpiritConfig> = {
   },
   'spirit.wind_fox': {
     id: 'spirit.wind_fox', name: '风狸', element: 'WIND',
-    cost: 55, range: 210, attackInterval: 0.8, damage: 7,
+    cost: 55, range: 270, attackInterval: 0.5, damage: 7,
     attackType: 'pulse', pulseRadius: 100, spreadEnv: true,
     status: 'GUSTED', statusDuration: 1.5, projectileSpeed: 0,
     upgradeCost: [55, 100], upgradeDamage: [4, 6],
@@ -73,7 +73,7 @@ export const SPIRITS: Record<string, SpiritConfig> = {
   },
   'spirit.frost_fox': {
     id: 'spirit.frost_fox', name: '霜狐', element: 'ICE',
-    cost: 55, range: 225, attackInterval: 0.9, damage: 10,
+    cost: 55, range: 285, attackInterval: 0.55, damage: 10,
     attackType: 'projectile', splash: 0, status: 'CHILL', statusDuration: 2.8,
     freezeWetFaster: true, projectileSpeed: 400, upgradeCost: [55, 100], upgradeDamage: [5, 9],
     desc: '冰刺减速，潮湿目标更易冻结',
@@ -267,43 +267,43 @@ export interface WaveEntry {
 }
 
 export const WAVES: WaveEntry[][] = [
-  [{ enemyId: 'enemy.ink_blob', count: 8, interval: 1.96, delay: 0 }],
+  [{ enemyId: 'enemy.ink_blob', count: 8, interval: 2.84, delay: 0 }],
   [
-    { enemyId: 'enemy.ink_blob', count: 10, interval: 1.61, delay: 0 },
-    { enemyId: 'enemy.ink_hound', count: 3, interval: 1.68, delay: 4 },
+    { enemyId: 'enemy.ink_blob', count: 10, interval: 2.33, delay: 0 },
+    { enemyId: 'enemy.ink_hound', count: 3, interval: 2.44, delay: 4 },
   ],
   [
-    { enemyId: 'enemy.ink_blob', count: 6, interval: 1.85, delay: 0 },
-    { enemyId: 'enemy.ink_hound', count: 5, interval: 0.99, delay: 2 },
-    { enemyId: 'enemy.ink_shell', count: 2, interval: 2.8, delay: 6 },
+    { enemyId: 'enemy.ink_blob', count: 6, interval: 2.68, delay: 0 },
+    { enemyId: 'enemy.ink_hound', count: 5, interval: 1.44, delay: 2 },
+    { enemyId: 'enemy.ink_shell', count: 2, interval: 4.06, delay: 6 },
   ],
   [
-    { enemyId: 'enemy.ink_worm', count: 12, interval: 0.58, delay: 0 },
-    { enemyId: 'enemy.ink_blob', count: 4, interval: 1.0, delay: 3 },
+    { enemyId: 'enemy.ink_worm', count: 12, interval: 0.84, delay: 0 },
+    { enemyId: 'enemy.ink_blob', count: 4, interval: 1.45, delay: 3 },
   ],
   [
-    { enemyId: 'enemy.ink_shell', count: 6, interval: 1.96, delay: 0 },
-    { enemyId: 'enemy.ink_blob', count: 8, interval: 0.91, delay: 1.5 },
-    { enemyId: 'enemy.mist_shade', count: 2, interval: 3.5, delay: 4 },
-    { enemyId: 'enemy.crack_shell', count: 2, interval: 4.2, delay: 7 },
+    { enemyId: 'enemy.ink_shell', count: 6, interval: 2.84, delay: 0 },
+    { enemyId: 'enemy.ink_blob', count: 8, interval: 1.32, delay: 1.5 },
+    { enemyId: 'enemy.mist_shade', count: 2, interval: 5.08, delay: 4 },
+    { enemyId: 'enemy.crack_shell', count: 2, interval: 6.09, delay: 7 },
   ],
   [
-    { enemyId: 'enemy.ink_blob', count: 8, interval: 0.82, delay: 0 },
-    { enemyId: 'enemy.ink_hound', count: 6, interval: 0.91, delay: 2 },
-    { enemyId: 'enemy.ink_shell', count: 3, interval: 2.52, delay: 5 },
-    { enemyId: 'enemy.ink_worm', count: 8, interval: 0.49, delay: 8 },
+    { enemyId: 'enemy.ink_blob', count: 8, interval: 1.19, delay: 0 },
+    { enemyId: 'enemy.ink_hound', count: 6, interval: 1.32, delay: 2 },
+    { enemyId: 'enemy.ink_shell', count: 3, interval: 3.65, delay: 5 },
+    { enemyId: 'enemy.ink_worm', count: 8, interval: 0.71, delay: 8 },
   ],
   [
-    { enemyId: 'enemy.ink_worm', count: 16, interval: 0.46, delay: 0 },
-    { enemyId: 'enemy.ink_hound', count: 8, interval: 0.82, delay: 2.5 },
-    { enemyId: 'enemy.ink_shell', count: 2, interval: 3.08, delay: 7 },
-    { enemyId: 'enemy.mist_shade', count: 3, interval: 2.52, delay: 3 },
-    { enemyId: 'enemy.spirit_giant', count: 1, interval: 1.0, delay: 10 },
-    { enemyId: 'enemy.crack_shell', count: 2, interval: 3.5, delay: 8 },
+    { enemyId: 'enemy.ink_worm', count: 16, interval: 0.67, delay: 0 },
+    { enemyId: 'enemy.ink_hound', count: 8, interval: 1.19, delay: 2.5 },
+    { enemyId: 'enemy.ink_shell', count: 2, interval: 4.47, delay: 7 },
+    { enemyId: 'enemy.mist_shade', count: 3, interval: 3.65, delay: 3 },
+    { enemyId: 'enemy.spirit_giant', count: 1, interval: 1.45, delay: 10 },
+    { enemyId: 'enemy.crack_shell', count: 2, interval: 5.08, delay: 8 },
   ],
   [
-    { enemyId: 'enemy.ink_tiger', count: 1, interval: 1.0, delay: 0 },
-    { enemyId: 'enemy.ink_blob', count: 6, interval: 1.68, delay: 3 },
+    { enemyId: 'enemy.ink_tiger', count: 1, interval: 1.45, delay: 0 },
+    { enemyId: 'enemy.ink_blob', count: 6, interval: 2.44, delay: 3 },
   ],
 ];
 

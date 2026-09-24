@@ -262,13 +262,23 @@ export class GameRoot extends Component {
         const c = this.hex(col ? col.color : '#E85D3A');
         // 攻击前摇：轻微放大
         const lastAtk = (slot.spirit as any).lastAtk as number | undefined;
-        const atk = lastAtk != null ? Math.max(0, 1 - (this.animTime - lastAtk) * 4) : 0;
-        const sc = 1 + atk * 0.12;
+        const dtAtk = lastAtk != null ? this.battle.time - lastAtk : 99;
+        const atk = Math.max(0, 1 - dtAtk * 3.5);
+        const sc = 1 + atk * 0.28;
+        // 朝向目标的前冲
+        const lean = atk * 14;
         g.fillColor = c;
-        g.circle(x, y - 22, 20 * sc);
+        g.circle(x + lean, y - 22, 20 * sc);
         g.fill();
-        g.circle(x, y - 52, 15 * sc);
+        g.circle(x + lean, y - 52, 15 * sc);
         g.fill();
+        // 攻击闪光
+        if (atk > 0.05) {
+          g.strokeColor = new Color(255, 255, 255, 200 * atk);
+          g.lineWidth = 3;
+          g.circle(x + lean, y - 36, 34 * (0.6 + atk));
+          g.stroke();
+        }
         // 点击选中时显示攻击范围
         if (battle.selectedSlot === slot.id) {
           g.strokeColor = new Color(c.r, c.g, c.b, 200);

@@ -114,7 +114,7 @@ export class Battle {
     this.spawnQueues = [];
     this.slots.clear();
     for (const s of MAP.slots) {
-      const pos = pushOffPath({ x: s.x, y: s.y }, this.path, 95);
+      const pos = pushOffPath({ x: s.x, y: s.y }, this.path, 72);
       this.slots.set(s.id, {
         id: s.id,
         x: pos.x,
@@ -527,6 +527,7 @@ export class Battle {
       const target = this.findTarget(s);
       if (!target) continue;
       s.cooldown = s.config.attackInterval;
+      (s as any).lastAtk = this.time;
       const dmg = s.effectiveDamage();
       const statusDur = s.config.statusDuration * this.resonance.statusDurationBonus(s);
       const type = s.config.attackType;
