@@ -138,23 +138,23 @@ export class GameRoot extends Component {
     const last = path[path.length - 1];
     const prev = path[Math.max(0, path.length - 2)];
     if (!this.decorCave) {
-      const c = makeSpriteNode('CaveGate', 380, 'textures/ui/cave_gate', this.unitSpriteLayer);
+      const c = makeSpriteNode('CaveGate', 420, 'textures/ui/cave_gate', this.unitSpriteLayer);
       this.decorCave = c.node;
     }
     if (!this.decorSeed) {
-      const s = makeSpriteNode('SeedShrine', 420, 'textures/ui/seed_shrine', this.unitSpriteLayer);
+      const s = makeSpriteNode('SeedShrine', 520, 'textures/ui/seed_shrine', this.unitSpriteLayer);
       this.decorSeed = s.node;
     }
     const bob = Math.sin(this.animTime * 3) * 4;
     // 洞口对齐路径起点，略下沉盖住线头
     const sp0 = this.toLocal(start.x, start.y);
-    if (this.decorCave) this.decorCave.setPosition(sp0.x, sp0.y - 20);
+    if (this.decorCave) this.decorCave.setPosition(sp0.x, sp0.y - 36);
     // 灵种台压住整段路尾
     const lp = this.toLocal(last.x, last.y);
     const pp = this.toLocal(prev.x, prev.y);
     const cx = (lp.x + pp.x) / 2;
     const cy = (lp.y + pp.y) / 2 + 36 + bob;
-    if (this.decorSeed) this.decorSeed.setPosition(cx, cy);
+    if (this.decorSeed) this.decorSeed.setPosition(cx, cy + 24);
   }
 
   /** 攻击/命中特效贴图（短命） */
@@ -200,7 +200,7 @@ export class GameRoot extends Component {
         this.spiritSprites.set(key, view);
       }
       const p = this.toLocal(slot.x, slot.y);
-      view.node.setPosition(p.x, p.y - 4);
+      view.node.setPosition(p.x, p.y - 28);
       view.node.active = true;
     }
     for (const [key, view] of this.spiritSprites) {
@@ -265,9 +265,9 @@ export class GameRoot extends Component {
         const atk = lastAtk != null ? Math.max(0, 1 - (this.animTime - lastAtk) * 4) : 0;
         const sc = 1 + atk * 0.12;
         g.fillColor = c;
-        g.circle(x, y - 8, 20 * sc);
+        g.circle(x, y - 22, 20 * sc);
         g.fill();
-        g.circle(x, y - 42, 15 * sc);
+        g.circle(x, y - 52, 15 * sc);
         g.fill();
         // 点击选中时显示攻击范围
         if (battle.selectedSlot === slot.id) {
